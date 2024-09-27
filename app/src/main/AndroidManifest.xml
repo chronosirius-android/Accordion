@@ -15,7 +15,11 @@
         <service
             android:name=".DiscordGatewayService"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Maintains a connection to the Discord Gateway"/>
+        </service>
 
         <activity
             android:name=".MainActivity"

@@ -1,5 +1,6 @@
 package xyz.chronosirius.accordion
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
                 // We never need to update these components manually, the system will do it for us
                 // when it detects a change in a value it triggers a recomposition
                 // and redraws the screen with the new values/data
+                startService(Intent(this, DiscordGatewayService::class.java))
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
 
                 }
