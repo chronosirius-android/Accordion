@@ -12,6 +12,7 @@ import io.ktor.client.plugins.websocket.webSocket
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import androidx.preference.PreferenceManager
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
@@ -23,7 +24,7 @@ import java.util.Queue
 
 class DiscordGatewayService : LifecycleService() {
 
-    private val client = HttpClient() {
+    private val client = HttpClient(OkHttp) {
         // Configure the client here
         install(WebSockets) {
             maxFrameSize = 4096
@@ -51,7 +52,9 @@ class DiscordGatewayService : LifecycleService() {
                 val startFrame = incoming.receive() as Frame.Text
                 val startPayload = Json.parseToJsonElement(startFrame.readText())
                 Log.d("DiscordGatewayService", startPayload.toString()) // Debugging
-                val heartbeat_interval = startPayload.jsonObject["d"]?.jsonObject?.get("heartbeat_interval")?.jsonObject.toString().toLong();
+                val heartbeat_interval = startPayload.jsonObject["d"]!!
+                    .jsonObject["heartbeat_interval"]!!
+                    .toString().toLong();
                 var last_beat = System.currentTimeMillis();
                 sendSerialized(
                     mapOf("op" to 1,
@@ -59,7 +62,7 @@ class DiscordGatewayService : LifecycleService() {
                     )
                 )
                 sendSerialized(
-                    mapOf("op" to 2,
+                    LinkedHashMap(mapOf("op" to 2,
                         "d" to mapOf(
                             "token" to PreferenceManager.getDefaultSharedPreferences(
                                 this@DiscordGatewayService)
@@ -73,7 +76,7 @@ class DiscordGatewayService : LifecycleService() {
                         ),
                         "s" to null,
                         "t" to null
-                    )
+                    ))
                 )
                 var seq = null;
                 while (true) {

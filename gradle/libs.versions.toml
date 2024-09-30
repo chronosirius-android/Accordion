@@ -17,6 +17,7 @@ jetbrainsKotlinJvm = "1.9.0"
 ktorClientAndroid = "3.0.0-rc-1"
 lifecycleService = "2.8.6"
 preferenceKtx = "1.2.1"
+ktorClientOkhttp = "${ktor_version}"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,6 +42,7 @@ ktor-ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref =
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktorClientAndroid" }
 androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-service", version.ref = "lifecycleService" }
 androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "preferenceKtx" }
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version = "3.0.0-rc-1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
