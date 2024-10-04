@@ -35,6 +35,8 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+
+                <action android:name="xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR" />
             </intent-filter>
         </activity>
     </application>

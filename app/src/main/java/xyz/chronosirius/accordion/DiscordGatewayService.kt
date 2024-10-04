@@ -4,23 +4,21 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.MutableLiveData
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.WebSockets
 import androidx.lifecycle.lifecycleScope
-import io.ktor.client.plugins.websocket.sendSerialized
 import io.ktor.client.plugins.websocket.webSocket
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import androidx.preference.PreferenceManager
 import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
+import xyz.chronosirius.accordion.data.DataObject
 import java.util.LinkedList
 import java.util.Queue
+import kotlin.system.exitProcess
 
 class DiscordGatewayService : LifecycleService() {
 
@@ -28,14 +26,15 @@ class DiscordGatewayService : LifecycleService() {
         // Configure the client here
         install(WebSockets) {
             maxFrameSize = 4096
-            contentConverter = KotlinxWebsocketSerializationConverter(Json)
         }
 
     }
 
+
     private var supervisorJob = SupervisorJob(parent=null)
     companion object {
-        val queue: Queue<JsonObject> = LinkedList()
+        val queue: Queue<DataObject> = LinkedList()
+        val isGatewayConnected: MutableLiveData<Boolean> = MutableLiveData(false)
     }
     override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
@@ -46,53 +45,93 @@ class DiscordGatewayService : LifecycleService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val serviceJob = lifecycleScope.launch {
-            client.webSocket("wss://gateway.discord.gg/?v=9&encoding=json") {
-                // this: DefaultClientWebSocketSession
-                // Send text frame
-                val startFrame = incoming.receive() as Frame.Text
-                val startPayload = Json.parseToJsonElement(startFrame.readText())
-                Log.d("DiscordGatewayService", startPayload.toString()) // Debugging
-                val heartbeat_interval = startPayload.jsonObject["d"]!!
-                    .jsonObject["heartbeat_interval"]!!
-                    .toString().toLong();
-                var last_beat = System.currentTimeMillis();
-                sendSerialized(
-                    mapOf("op" to 1,
-                        "d" to 0
-                    )
-                )
-                sendSerialized(
-                    LinkedHashMap(mapOf("op" to 2,
-                        "d" to mapOf(
-                            "token" to PreferenceManager.getDefaultSharedPreferences(
-                                this@DiscordGatewayService)
-                                .getString("token", ""),
-                            "intents" to 513,
-                            "properties" to mapOf(
-                                "os" to "android",
-                                "browser" to "accordion",
-                                "device" to "accordion"
-                            )
-                        ),
-                        "s" to null,
-                        "t" to null
-                    ))
-                )
-                var seq = null;
-                while (true) {
-                    if (System.currentTimeMillis() - last_beat > heartbeat_interval) {
-                        sendSerialized(
-                            mapOf("op" to 1,
-                                "d" to seq
-                            )
-                        )
-                        last_beat = System.currentTimeMillis();
+            try {
+                client.webSocket("wss://gateway.discord.gg/?v=9&encoding=json") {
+                    // this: DefaultClientWebSocketSession
+                    // Send text frame
+                    suspend fun sendObject(obj: DataObject) {
+                        Log.d("DiscordGatewayService sendObject", obj.toString())
+                        this.send(Frame.Text(obj.toString()))
                     }
+                    val hello = DataObject.fromJson((incoming.receive() as Frame.Text).readText())
+                    Log.d("DiscordGatewayService", hello.toString())
+                    if (hello.getInt("op") != 10) {
+                        Log.e("DiscordGatewayService", "Expected OP 10, got ${hello.getInt("op")}")
+                        isGatewayConnected.value = false
+                        exitProcess(1)
+                    }
+                    val heartbeatInterval = hello.getObject("d").getInt("heartbeat_interval")
+                    var lastBeat = System.currentTimeMillis()
+                    // HELLO PROCESSING COMPLETE
+                    sendObject(DataObject.empty()
+                        .put("op", 1)
+                        .put("d", null)
+                    )
+                    // FIRST HEARTBEAT SENT
+                    try {
+                        sendObject(
+                            DataObject.empty()
+                                .put("op", 2)
+                                .put("d", DataObject.empty()
+                                    .put("token", PreferenceManager.getDefaultSharedPreferences(this@DiscordGatewayService).getString("token",
+                                            "")!!)
+                                    .put("intents", 513)
+                                    .put("properties", DataObject.empty()
+                                        .put("os", "android")
+                                        .put("browser", "accordion")
+                                        .put("device", "unknown")
+                                    )
+                                )
+                        )
 
-                    val frame = incoming.receive() as Frame.Text
-                    val payload = Json.parseToJsonElement(frame.readText())
-                    Log.d("DiscordGatewayService", payload.toString()) // Debugging
+                    } catch (e: Exception) {
+                        sendBroadcast(Intent("xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR"))
+                        isGatewayConnected.value = false
+                    }
+                    var seq = 0
+                    isGatewayConnected.value = true
+                    for (frame in incoming) {
+                        isGatewayConnected.value = false
+                        isGatewayConnected.value = true
+                        if (System.currentTimeMillis() - lastBeat > heartbeatInterval) {
+                            try {
+                            sendObject(
+                                DataObject.empty()
+                                    .put("op", 1)
+                                    .put("d", seq)
+                            ) } catch (e: Exception) {
+                                Log.e("DiscordGatewayService", e.stackTraceToString())
+                                Log.e("DiscordGatewayService", "Real Line 113")
+                            }
+                            lastBeat = System.currentTimeMillis();
+                        }
+
+                        if (incoming.isClosedForReceive) {
+                            Log.e("DiscordGatewayService", "Incoming is closed")
+                            sendBroadcast(Intent("xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR"))
+                            isGatewayConnected.value = false
+                            break
+                        } else {
+                            Log.d("DiscordGatewayService", "Incoming is open")
+                        }
+                        try {
+                            val payload =
+                                DataObject.fromJson((frame as Frame.Text).readText())
+                            Log.d("DiscordGatewayService", payload.toString()) // Debugging
+                        } catch (e: Exception) {
+                            Log.e("DiscordGatewayService", e.stackTraceToString())
+                            Log.e("DiscordGatewayService", "Real Line amongus")
+                            Log.d("DiscordGatewayService", closeReason.await().toString())
+                            sendBroadcast(Intent("xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR"))
+                            isGatewayConnected.value = false
+                        }
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e("DiscordGatewayService", e.stackTraceToString())
+                Log.e("DiscordGatewayService", "Real Line 125")
+                isGatewayConnected.value = false
+                Log.d("DiscordGatewayService", "sent intent xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR")
             }
         }
         return super.onStartCommand(intent, flags, startId)
