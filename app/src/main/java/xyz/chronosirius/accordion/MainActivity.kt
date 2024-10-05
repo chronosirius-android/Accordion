@@ -9,8 +9,10 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -18,31 +20,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import okhttp3.internal.immutableListOf
+import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.ui.theme.AccordionTheme
 
 // UI components file
 // https://developer.android.com/develop/ui/compose/documentation
 
 class MainActivity : ComponentActivity() {
-    var gatewayConnected = mutableStateOf(false)
-    private val intentBroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d("MainActivity", "Received broadcast " + intent?.action)
-            if (intent?.action == "xyz.chronosirius.accordion.DISCORD_GATEWAY_CONNECTED") {
-                gatewayConnected.value = true
-            } else if (intent?.action == "xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR") {
-                gatewayConnected.value = false
-            }
-        }
-    }
+    private var gatewayConnected = mutableStateOf(false)
     private var gatewayObserver: Observer<Boolean>? = null
+    private var messageObserver: Observer<DataObject>? = null
+    private var messageList = mutableStateOf(DataObject.empty())
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        registerReceiver(intentBroadcastReceiver, IntentFilter("xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR"),
-            RECEIVER_NOT_EXPORTED
-        )
         gatewayObserver = Observer { connected ->
             Log.d("MainActivity", "Gateway connected: $connected")
             this@MainActivity.gatewayConnected.value = connected
@@ -51,6 +47,15 @@ class MainActivity : ComponentActivity() {
         gatewayObserver?.let {
             DiscordGatewayService.isGatewayConnected.observe(this, it)
         }
+        messageObserver = Observer { message ->
+            Log.d("MainActivity", "Message received: $message")
+            messageList.value = message
+            Log.d("MainActivity", "Message list: $messageList")
+        }
+        messageObserver?.let {
+            DiscordGatewayService.latestMessage.observe(this, it)
+        }
+
         setContent {
             AccordionTheme {
                 // Jetpack Compose basically uses lambdas inside lambdas to create UI components
@@ -61,8 +66,8 @@ class MainActivity : ComponentActivity() {
                 startService(Intent(this, DiscordGatewayService::class.java))
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Log.d("MainActivity", "Recomposing UI")
-                    val mGatewayConnected by remember { gatewayConnected }
-                    if (mGatewayConnected) {
+                    //val mGatewayConnected by remember { gatewayConnected }
+                    if (gatewayConnected.value) {
                         Log.d("MainActivity", "Gateway connected")
                         Text(
                             text = "Connected to Discord Gateway",
@@ -74,6 +79,11 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(innerPadding)
                         )
                     }
+
+                    Text(
+                        text = "Message: ${messageList.value.toPrettyString()}",
+                        modifier = Modifier.padding(innerPadding).padding(top=16.dp)
+                    )
                 }
             }
         }
@@ -81,7 +91,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(intentBroadcastReceiver)
         gatewayObserver?.let {
             DiscordGatewayService.isGatewayConnected.removeObserver(it)
         }
