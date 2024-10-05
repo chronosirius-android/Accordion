@@ -94,5 +94,8 @@ class MainActivity : ComponentActivity() {
         gatewayObserver?.let {
             DiscordGatewayService.isGatewayConnected.removeObserver(it)
         }
+        messageObserver?.let {
+            DiscordGatewayService.latestMessage.removeObserver(it)
+        }
     }
 }
