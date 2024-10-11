@@ -1,33 +1,32 @@
 package xyz.chronosirius.accordion
 
 import android.annotation.SuppressLint
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
 import android.os.IBinder
 import android.util.Log
-import androidx.lifecycle.LifecycleService
-import io.ktor.client.*
-import io.ktor.client.plugins.websocket.WebSockets
-import androidx.lifecycle.lifecycleScope
-import io.ktor.client.plugins.websocket.webSocket
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import androidx.preference.PreferenceManager
-import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
+import androidx.preference.PreferenceManager
+import io.ktor.client.*
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.models.ResumeData
 import kotlin.system.exitProcess
@@ -51,13 +50,14 @@ class DiscordGatewayService : LifecycleService() {
 
     private var supervisorJob = SupervisorJob(parent=null)
     companion object {
-        val latestMessage = mutableStateOf(DataObject.empty())
-        val isGatewayConnected = mutableStateOf(false)
-        val wsCloseReason = mutableStateOf<CloseReason?>(CloseReason(0, ""))
-        val otherError = mutableStateOf(Exception())
-        val errorType = mutableStateOf(ErrorType.NONE)
-        var resumeData = ResumeData()
+        val latestMessage = MutableLiveData(DataObject.empty())
+        val isGatewayConnected = MutableLiveData(false)
+        val wsCloseReason = MutableLiveData<CloseReason?>(null)
+        val otherError = MutableLiveData<Exception?>(null)
+        val errorType = MutableLiveData(ErrorType.NONE)
     }
+
+    private val resumeData = ResumeData()
 
     private val testToken = ""
     override fun onBind(intent: Intent): IBinder {
@@ -74,13 +74,12 @@ class DiscordGatewayService : LifecycleService() {
             "Discord Gateway Service",
             NotificationManager.IMPORTANCE_DEFAULT
         )
-        val notificationManager = getSystemService(NotificationManager::class.java);
-        notificationManager.createNotificationChannel(channel);
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.createNotificationChannel(channel)
         lifecycleScope.launch {
-            var reconnect = true
-            while (reconnect) {
+            while (resumeData.shouldResume) {
                 try {
-                    client.webSocket("wss://gateway.discord.gg/?v=9&encoding=json") {
+                    client.webSocket(resumeData.url) {
                         // this: DefaultClientWebSocketSession
                         // Send text frame
                         suspend fun sendObject(obj: DataObject) {
@@ -182,7 +181,7 @@ class DiscordGatewayService : LifecycleService() {
                                 val payload = DataObject.fromJson((frame as Frame.Text).readText())
                                 resumeData.seq = payload.getInt("s", 0)
                                 latestMessage.value = payload
-                                Log.d("DiscordGatewayService", payload.toString()) // Debugging
+                                //Log.d("DiscordGatewayService payload recv", payload.toString()) // Debugging
                                 when (payload.getInt("op")) {
                                     1 -> {
                                         Log.d("DiscordGatewayService", "OP 1 received")
@@ -255,7 +254,7 @@ class DiscordGatewayService : LifecycleService() {
                 )
             }
             "MESSAGE_CREATE" -> {
-                Log.d("DiscordGatewayService", "MESSAGE_CREATE event received")
+                Log.d("DiscordGatewayService/DISPATCH", "MESSAGE_CREATE event received content:${payload.getObject("d").getString("content")}")
             }
             else -> {
                 Log.d("DiscordGatewayService", "Unknown event received")

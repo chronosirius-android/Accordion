@@ -1,6 +1,5 @@
 package xyz.chronosirius.accordion
 
-import android.R
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -22,33 +21,42 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Observer
-import xyz.chronosirius.accordion.data.DataObject
-import xyz.chronosirius.accordion.ui.theme.AccordionTheme
-import androidx.navigation.compose.rememberNavController
-import androidx.preference.PreferenceManager
-import xyz.chronosirius.accordion.DiscordGatewayService
-import xyz.chronosirius.accordion.ui.LoginScreen
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.painterResource
-import androidx.core.app.ServiceCompat.startForeground
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.Observer
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.preference.PreferenceManager
+import xyz.chronosirius.accordion.data.DataObject
+import xyz.chronosirius.accordion.ui.DirectMessageScreen
+import xyz.chronosirius.accordion.ui.LoginScreen
+import xyz.chronosirius.accordion.ui.theme.AccordionTheme
 
 // UI components file
 // https://developer.android.com/develop/ui/compose/documentation
 
 class MainActivity : ComponentActivity() {
+
+    var gatewayConnected by mutableStateOf(false)
+    val gwObserver = Observer<Boolean> {
+        gatewayConnected = it
+    }
+
+    var latestMessage by mutableStateOf(DataObject.empty())
+    val messageObserver = Observer<DataObject> {
+        Log.d("MainActivity", "Message received: ${it.toPrettyString()}")
+        latestMessage = it
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+        messageObserver.let { DiscordGatewayService.latestMessage.observe(this, it) }
+        gwObserver.let { DiscordGatewayService.isGatewayConnected.observe(this, it) }
         setContent {
             AccordionTheme {
                 // Jetpack Compose basically uses lambdas inside lambdas to create UI components
@@ -59,7 +67,7 @@ class MainActivity : ComponentActivity() {
                 startForegroundService(Intent(this, DiscordGatewayService::class.java))
                 var loggedIn by remember { mutableStateOf<Boolean>(true) }
                 var loading by remember { mutableStateOf<Boolean>(true) }
-                var gatewayConnected by remember {DiscordGatewayService.isGatewayConnected }
+
                 if (gatewayConnected) loading = false
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val navController = rememberNavController()
@@ -92,8 +100,11 @@ class MainActivity : ComponentActivity() {
                                 val k = rememberScrollState()
                                 Column(modifier = Modifier.verticalScroll(k)) {
                                     Text("Home screen")
-                                    Text("Message: ${DiscordGatewayService.latestMessage.value.toPrettyString()}")
+                                    Text("Message: ${latestMessage.toPrettyString()}")
                                 }
+                            }
+                            composable("dms") {
+                                DirectMessageScreen(navController)
                             }
                         }
                     }
@@ -124,6 +135,20 @@ class MainActivity : ComponentActivity() {
                 }*/
             }
         }
+    }
+
+    override fun onPause() {
+        Log.d("MainActivity", "onPause")
+        gwObserver.let { DiscordGatewayService.isGatewayConnected.removeObserver(it) }
+        messageObserver.let { DiscordGatewayService.latestMessage.removeObserver(it) }
+        return super.onPause()
+    }
+
+    override fun onResume() {
+        Log.d("MainActivity", "onResume")
+        messageObserver.let { DiscordGatewayService.latestMessage.observe(this, it) }
+        gwObserver.let { DiscordGatewayService.isGatewayConnected.observe(this, it) }
+        return super.onResume()
     }
 
     override fun onDestroy() {
