@@ -70,6 +70,8 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.jsr305)
     implementation(libs.core)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.fragment)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -23,6 +23,8 @@ jsr305 = "3.0.2"
 trove4j = "20160824"
 trove4jVersion = "3.0.3"
 core = "3.1.0"
+navigationCompose = "2.8.2"
+navigationFragment = "2.8.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,6 +59,8 @@ jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "j
 trove4j = { group = "org.jetbrains.trove4j", name = "trove4j", version.ref = "trove4j" }
 net-trove4j = { group = "net.sf.trove4j", name = "trove4j", version.ref = "trove4jVersion" }
 core = { group = "net.sf.trove4j", name = "core", version.ref = "core" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationCompose" }
 
 
 [plugins]
