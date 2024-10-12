@@ -1,5 +1,6 @@
 package xyz.chronosirius.accordion
 
+import android.app.ActivityManager
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -64,7 +65,15 @@ class MainActivity : ComponentActivity() {
                 // We never need to update these components manually, the system will do it for us
                 // when it detects a change in a value it triggers a recomposition
                 // and redraws the screen with the new values/data
-                startForegroundService(Intent(this, DiscordGatewayService::class.java))
+                var startService = true
+                val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+                for (t in am.getRunningServices(Integer.MAX_VALUE)) {
+                    if (t.service.className == DiscordGatewayService::class.java.name) {
+                        Log.d("MainActivity", "Service already running")
+                        startService = false
+                    }
+                }
+                if (startService) startForegroundService(Intent(this, DiscordGatewayService::class.java))
                 var loggedIn by remember { mutableStateOf<Boolean>(true) }
                 var loading by remember { mutableStateOf<Boolean>(true) }
 

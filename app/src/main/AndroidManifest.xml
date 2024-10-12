@@ -27,6 +27,13 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Maintains a connection to the Discord Gateway"/>
         </service>
+        <receiver android:name=".DiscordGatewayLauncher"
+            android:exported="false"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR" />
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".MainActivity"

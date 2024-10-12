@@ -77,7 +77,8 @@ class DiscordGatewayService : LifecycleService() {
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
         lifecycleScope.launch {
-            while (resumeData.shouldResume) {
+            while (resumeData.shouldReconnect) {
+                Log.d("DiscordGatewayService/ResumeData", resumeData.toString())
                 try {
                     client.webSocket(resumeData.url) {
                         // this: DefaultClientWebSocketSession
@@ -120,7 +121,6 @@ class DiscordGatewayService : LifecycleService() {
                                                             testToken
                                                         )!!
                                                 )
-                                                .put("intents", 513)
                                                 .put(
                                                     "properties", DataObject.empty()
                                                         .put("os", "android")
@@ -162,7 +162,7 @@ class DiscordGatewayService : LifecycleService() {
                                     )
                                 } catch (e: Exception) {
                                     Log.e("DiscordGatewayService", e.stackTraceToString())
-                                    Log.e("DiscordGatewayService", "Real Line 113")
+                                    Log.e("DiscordGatewayService", "Heartbeat Error")
                                 }
                             }
                         } // End heartBeatJob
@@ -216,6 +216,7 @@ class DiscordGatewayService : LifecycleService() {
                                 Log.e("DiscordGatewayService", e.stackTraceToString())
                                 Log.d("DiscordGatewayService", closeReason.await().toString())
                                 isGatewayConnected.value = false
+                                heartBeatJob.cancel()
                             }
                         } // end for frame in incoming
                     } // end WebSocket
@@ -240,6 +241,7 @@ class DiscordGatewayService : LifecycleService() {
                 resumeData.url = payload.getObject("d").getString("resume_gateway_url")
                 resumeData.sessionId = payload.getObject("d").getString("session_id")
                 resumeData.shouldResume = true
+                resumeData.shouldReconnect = true
                 Log.d("DiscordGatewayService", "Resume data: $resumeData")
                 Log.d("DiscordGatewayService/DISPATCH", "READY! $payload")
                 ServiceCompat.startForeground(

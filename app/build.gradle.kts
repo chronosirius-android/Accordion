@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.core)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.fragment)
+    implementation(libs.accompanist.permissions)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
