@@ -41,9 +41,7 @@ class DiscordGatewayService : LifecycleService() {
 
     private val client = HttpClient(OkHttp) {
         // Configure the client here
-        install(WebSockets) {
-            maxFrameSize = 4096
-        }
+        install(WebSockets)
 
     }
 
@@ -55,24 +53,23 @@ class DiscordGatewayService : LifecycleService() {
         val wsCloseReason = MutableLiveData<CloseReason?>(null)
         val otherError = MutableLiveData<Exception?>(null)
         val errorType = MutableLiveData(ErrorType.NONE)
+        // TODO("Refactor this to use bindings (bindService + onBind) instead of a publicly accessible MutableLiveData for increased stability + security")
     }
 
     private val resumeData = ResumeData()
 
     private val testToken = ""
     override fun onBind(intent: Intent): IBinder {
-        super.onBind(intent)
+        val a = super.onBind(intent)
         TODO("Return the communication channel to the service.")
     }
 
-
-
     @OptIn(DelicateCoroutinesApi::class)
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onCreate() {
         val channel = NotificationChannel(
             "gateway",
             "Discord Gateway Service",
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_MIN
         )
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
@@ -83,7 +80,7 @@ class DiscordGatewayService : LifecycleService() {
                     client.webSocket(resumeData.url) {
                         // this: DefaultClientWebSocketSession
                         // Send text frame
-                        suspend fun sendObject(obj: DataObject) {
+                        suspend fun sendObject(obj: DataObject) { // TODO("Switch to ETF because it's more efficient in memory and in network usage")
                             Log.d("DiscordGatewayService sendObject", obj.toString())
                             this.send(Frame.Text(obj.toString()))
                         }
@@ -226,10 +223,10 @@ class DiscordGatewayService : LifecycleService() {
                     errorType.value = ErrorType.OTHER_ERROR
                     otherError.value = e
                 }
-                delay(5000)
+                delay(2500)
             } // end while
         }
-        return super.onStartCommand(intent, flags, startId)
+        return super.onCreate()
     }
 
     @SuppressLint("InlinedApi")
@@ -250,7 +247,7 @@ class DiscordGatewayService : LifecycleService() {
                     NotificationCompat.Builder(this, "gateway")
                         .setContentTitle("Discord Gateway Service")
                         .setContentText("Connected to Discord Gateway")
-                        .setSmallIcon(R.drawable.ic_launcher_foreground)
+                        .setSmallIcon(R.drawable.compare_arrows)
                         .build(),
                     FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 )
