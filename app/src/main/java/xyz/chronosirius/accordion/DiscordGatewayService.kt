@@ -1,63 +1,90 @@
 package xyz.chronosirius.accordion
 
+import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.ktor.client.*
-import io.ktor.client.plugins.websocket.WebSockets
 import androidx.lifecycle.lifecycleScope
-import io.ktor.client.plugins.websocket.webSocket
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import androidx.preference.PreferenceManager
+import io.ktor.client.*
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
+import io.ktor.websocket.close
 import io.ktor.websocket.readText
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import xyz.chronosirius.accordion.data.DataObject
-import java.util.LinkedList
-import java.util.Queue
+import xyz.chronosirius.accordion.models.ResumeData
 import kotlin.system.exitProcess
+
+enum class ErrorType(val t: Int) {
+    NONE(0),
+    WEBSOCKET_ERROR(1),
+    OTHER_ERROR(2)
+}
 
 class DiscordGatewayService : LifecycleService() {
 
     private val client = HttpClient(OkHttp) {
         // Configure the client here
-        install(WebSockets) {
-            maxFrameSize = 4096
-        }
+        install(WebSockets)
 
     }
 
 
     private var supervisorJob = SupervisorJob(parent=null)
     companion object {
-        val latestMessage: MutableLiveData<DataObject> = MutableLiveData(DataObject.empty())
-        val isGatewayConnected: MutableLiveData<Boolean> = MutableLiveData(false)
+        val latestMessage = MutableLiveData(DataObject.empty())
+        val isGatewayConnected = MutableLiveData(false)
+        val wsCloseReason = MutableLiveData<CloseReason?>(null)
+        val otherError = MutableLiveData<Exception?>(null)
+        val errorType = MutableLiveData(ErrorType.NONE)
+        // TODO("Refactor this to use bindings (bindService + onBind) instead of a publicly accessible MutableLiveData for increased stability + security")
     }
+
+    private val resumeData = ResumeData()
+
+    private val testToken = ""
     override fun onBind(intent: Intent): IBinder {
-        super.onBind(intent)
+        val a = super.onBind(intent)
         TODO("Return the communication channel to the service.")
     }
 
-
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val serviceJob = lifecycleScope.launch {
-            var seq = 0
-            while (true) {
+    @OptIn(DelicateCoroutinesApi::class)
+    override fun onCreate() {
+        val channel = NotificationChannel(
+            "gateway",
+            "Discord Gateway Service",
+            NotificationManager.IMPORTANCE_MIN
+        )
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.createNotificationChannel(channel)
+        lifecycleScope.launch {
+            while (resumeData.shouldReconnect) {
+                Log.d("DiscordGatewayService/ResumeData", resumeData.toString())
                 try {
-                    client.webSocket("wss://gateway.discord.gg/?v=9&encoding=json") {
+                    client.webSocket(resumeData.url) {
                         // this: DefaultClientWebSocketSession
                         // Send text frame
-                        suspend fun sendObject(obj: DataObject) {
+                        suspend fun sendObject(obj: DataObject) { // TODO("Switch to ETF because it's more efficient in memory and in network usage")
                             Log.d("DiscordGatewayService sendObject", obj.toString())
                             this.send(Frame.Text(obj.toString()))
                         }
-
+                        // HELLO START
                         val hello = DataObject.fromJson((incoming.receive() as Frame.Text).readText())
                         Log.d("DiscordGatewayService", hello.toString())
                         if (hello.getInt("op") != 10) {
@@ -66,7 +93,6 @@ class DiscordGatewayService : LifecycleService() {
                             exitProcess(1)
                         }
                         val heartbeatInterval = hello.getObject("d").getInt("heartbeat_interval")
-                        var lastBeat = System.currentTimeMillis()
                         // HELLO PROCESSING COMPLETE
                         sendObject(
                             DataObject.empty()
@@ -75,84 +101,169 @@ class DiscordGatewayService : LifecycleService() {
                         )
                         // FIRST HEARTBEAT SENT
                         try {
-                            sendObject(
-                                DataObject.empty()
-                                    .put("op", 2)
-                                    .put(
-                                        "d", DataObject.empty()
-                                            .put(
-                                                "token",
-                                                PreferenceManager.getDefaultSharedPreferences(this@DiscordGatewayService)
-                                                    .getString(
-                                                        "token",
-                                                        ""
-                                                    )!!
-                                            )
-                                            .put("intents", 513)
-                                            .put(
-                                                "properties", DataObject.empty()
-                                                    .put("os", "android")
-                                                    .put("browser", "accordion")
-                                                    .put("device", "unknown")
-                                            )
-                                    )
-                            )
-
+                            // apparently I don't have to IDENTIFY if I'm resuming so theres a conditional here
+                            if (!resumeData.shouldResume) {
+                                sendObject(
+                                    DataObject.empty()
+                                        .put("op", 2)
+                                        .put(
+                                            "d", DataObject.empty()
+                                                .put(
+                                                    "token",
+                                                    PreferenceManager.getDefaultSharedPreferences(
+                                                        this@DiscordGatewayService
+                                                    )
+                                                        .getString(
+                                                            "token",
+                                                            testToken
+                                                        )!!
+                                                )
+                                                .put(
+                                                    "properties", DataObject.empty()
+                                                        .put("os", "android")
+                                                        .put("browser", "accordion")
+                                                        .put("device", "unknown")
+                                                )
+                                        )
+                                )
+                            } else {
+                                sendObject(
+                                    DataObject.empty()
+                                        .put("op", 6)
+                                        .put(
+                                            "d", DataObject.empty()
+                                                .put("token", PreferenceManager.getDefaultSharedPreferences(this@DiscordGatewayService).getString("token", testToken)!!)
+                                                .put("session_id", resumeData.sessionId)
+                                                .put("seq", resumeData.seq)
+                                        )
+                                )
+                            }
                         } catch (e: Exception) {
-                            sendBroadcast(Intent("xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR"))
                             isGatewayConnected.value = false
+                            Log.e("DiscordGatewayService", e.stackTraceToString())
+                            val cr = closeReason.await()
+                            errorType.value = if (cr != null) ErrorType.WEBSOCKET_ERROR else ErrorType.OTHER_ERROR
+                            otherError.value = e
+                            wsCloseReason.value = cr
                         }
+
                         isGatewayConnected.value = true
-                        for (frame in incoming) {
-                            isGatewayConnected.value = false
-                            isGatewayConnected.value = true
-                            if (System.currentTimeMillis() - lastBeat > heartbeatInterval) {
+                        val heartBeatJob = launch(Dispatchers.IO) { // Heartbeat code (must disconnect from incoming frames or will not get sent)
+                            while (isGatewayConnected.value == true) {
+                                delay(heartbeatInterval.toLong())
                                 try {
                                     sendObject(
                                         DataObject.empty()
                                             .put("op", 1)
-                                            .put("d", seq)
+                                            .put("d", resumeData.seq)
                                     )
                                 } catch (e: Exception) {
                                     Log.e("DiscordGatewayService", e.stackTraceToString())
-                                    Log.e("DiscordGatewayService", "Real Line 113")
+                                    Log.e("DiscordGatewayService", "Heartbeat Error")
                                 }
-                                lastBeat = System.currentTimeMillis();
                             }
-
+                        } // End heartBeatJob
+                        for (frame in incoming) {
                             if (incoming.isClosedForReceive) {
                                 Log.e("DiscordGatewayService", "Incoming is closed")
-                                sendBroadcast(Intent("xyz.chronosirius.accordion.DISCORD_GATEWAY_ERROR"))
                                 isGatewayConnected.value = false
+                                heartBeatJob.cancel()
+                                wsCloseReason.value = closeReason.await()
+                                errorType.value = ErrorType.WEBSOCKET_ERROR
                                 break
                             } else {
-                                Log.d("DiscordGatewayService", "Incoming is open")
+                                Log.d("DiscordGatewayService", "Incoming is open, yay!")
                             }
                             try {
-                                val payload =
-                                    DataObject.fromJson((frame as Frame.Text).readText())
-                                seq = payload.getInt("s", 0)
+                                val payload = DataObject.fromJson((frame as Frame.Text).readText())
+                                resumeData.seq = payload.getInt("s", 0)
                                 latestMessage.value = payload
-                                Log.d("DiscordGatewayService", payload.toString()) // Debugging
+                                //Log.d("DiscordGatewayService payload recv", payload.toString()) // Debugging
+                                when (payload.getInt("op")) {
+                                    1 -> {
+                                        Log.d("DiscordGatewayService", "OP 1 received")
+                                        sendObject(
+                                            DataObject.empty()
+                                                .put("op", 1)
+                                                .put("d", resumeData.seq)
+                                        )
+                                    }
+                                    7 -> {
+                                        Log.d("DiscordGatewayService", "OP 7 received")
+                                        heartBeatJob.cancel()
+                                        isGatewayConnected.value = false
+                                        val cr = CloseReason(CloseReason.Codes.SERVICE_RESTART, "OP 7 received")
+                                        wsCloseReason.value = cr
+                                        close(cr)
+                                    }
+                                    9 -> {
+                                        Log.d("DiscordGatewayService", "OP 9 received")
+                                        heartBeatJob.cancel()
+                                        isGatewayConnected.value = false
+                                        val cr = CloseReason(CloseReason.Codes.CLOSED_ABNORMALLY, "OP 9 received")
+                                        wsCloseReason.value = cr
+                                        resumeData.shouldResume = false
+                                        close(cr)
+                                    }
+                                    0 -> {
+                                        handleEvent(payload)
+                                    }
+                                }
                             } catch (e: Exception) {
                                 Log.e("DiscordGatewayService", e.stackTraceToString())
-                                Log.e("DiscordGatewayService", "Real Line amongus")
                                 Log.d("DiscordGatewayService", closeReason.await().toString())
-
                                 isGatewayConnected.value = false
+                                heartBeatJob.cancel()
                             }
                         } // end for frame in incoming
                     } // end WebSocket
                 } catch (e: Exception) {
                     isGatewayConnected.value = false
+                    Log.e("DiscordGatewayService", e.stackTraceToString())
+                    errorType.value = ErrorType.OTHER_ERROR
+                    otherError.value = e
                 }
-                delay(1000)
+                delay(2500)
             } // end while
         }
-        return super.onStartCommand(intent, flags, startId)
+        return super.onCreate()
     }
+
+    @SuppressLint("InlinedApi")
+    fun handleEvent(payload: DataObject) {
+        Log.d("DiscordGatewayService", "Handling event")
+        when (payload.getString("t")) {
+            "READY" -> {
+                Log.d("DiscordGatewayService", "READY event received")
+                resumeData.url = payload.getObject("d").getString("resume_gateway_url")
+                resumeData.sessionId = payload.getObject("d").getString("session_id")
+                resumeData.shouldResume = true
+                resumeData.shouldReconnect = true
+                Log.d("DiscordGatewayService", "Resume data: $resumeData")
+                Log.d("DiscordGatewayService/DISPATCH", "READY! $payload")
+                ServiceCompat.startForeground(
+                    this,
+                    1,
+                    NotificationCompat.Builder(this, "gateway")
+                        .setContentTitle("Discord Gateway Service")
+                        .setContentText("Connected to Discord Gateway")
+                        .setSmallIcon(R.drawable.compare_arrows)
+                        .build(),
+                    FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            }
+            "MESSAGE_CREATE" -> {
+                Log.d("DiscordGatewayService/DISPATCH", "MESSAGE_CREATE event received content:${payload.getObject("d").getString("content")}")
+            }
+            else -> {
+                Log.d("DiscordGatewayService", "Unknown event received")
+            }
+        }
+    }
+
     override fun onDestroy() {
         supervisorJob.cancel()
+        lifecycleScope.cancel()
         super.onDestroy()
     }
 }
