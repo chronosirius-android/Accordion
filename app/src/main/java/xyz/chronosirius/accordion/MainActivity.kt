@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         }) {
-                                            Icon(Icons.Outlined.Home, contentDescription = "Home", modifier = Modifier.size(64.dp))
+                                            Icon(Icons.Outlined.Home, contentDescription = "Home", modifier = Modifier.size(32.dp))
                                         }
                                         IconButton(onClick = {
                                             // load dms pannel
@@ -144,7 +144,7 @@ class MainActivity : ComponentActivity() {
                                             Icon(
                                                 painterResource(R.drawable.chat_bubble),
                                                 contentDescription = "DMS",
-                                                modifier = Modifier.size(64.dp)
+                                                modifier = Modifier.size(32.dp)
                                             )
                                         }
                                         IconButton(onClick = {
@@ -154,7 +154,7 @@ class MainActivity : ComponentActivity() {
                                             Icon(
                                                 painterResource(R.drawable.forum),
                                                 contentDescription = "Servers",
-                                                modifier = Modifier.size(64.dp)
+                                                modifier = Modifier.size(32.dp)
                                             )
                                         }
                                     }
