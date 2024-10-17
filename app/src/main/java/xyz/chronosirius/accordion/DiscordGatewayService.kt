@@ -17,6 +17,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.utils.io.InternalAPI
 import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
@@ -64,7 +65,7 @@ class DiscordGatewayService : LifecycleService() {
         TODO("Return the communication channel to the service.")
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
+    @OptIn(DelicateCoroutinesApi::class, InternalAPI::class)
     override fun onCreate() {
         val channel = NotificationChannel(
             "gateway",

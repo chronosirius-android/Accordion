@@ -38,13 +38,14 @@ import androidx.preference.PreferenceManager
 import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.ui.DirectMessageScreen
 import xyz.chronosirius.accordion.ui.LoginScreen
+import xyz.chronosirius.accordion.ui.ServerScreen
 import xyz.chronosirius.accordion.ui.theme.AccordionTheme
 import xyz.chronosirius.accordion.viewmodels.RequestViewModel
 
 // UI components file
 // https://developer.android.com/develop/ui/compose/documentation
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     var gatewayConnected by mutableStateOf(false)
     val gwObserver = Observer<Boolean> {
@@ -112,12 +113,19 @@ class MainActivity : AppCompatActivity() {
                                         Icon(Icons.Outlined.Home, contentDescription = "Home")
                                     }
                                     IconButton(onClick = {
+                                        // load dms pannel
                                         navController.navigate("dms")
                                         gwObserver.let { DiscordGatewayService.isGatewayConnected.removeObserver(it) }
                                         messageObserver.let { DiscordGatewayService.latestMessage.removeObserver(it) }
                                     }) {
-                                        Icon(painterResource(R.drawable.forum), contentDescription = "Home")
-                                    } 
+                                        Icon(painterResource(R.drawable.chat_bubble), contentDescription = "DMS")
+                                    }
+                                    IconButton(onClick = {
+                                        // load servers pannel
+                                        navController.navigate("servers")
+                                    }) {
+                                        Icon(painterResource(R.drawable.forum), contentDescription = "Servers")
+                                    }
                                 }
                             )
                         }
@@ -126,12 +134,16 @@ class MainActivity : AppCompatActivity() {
                             composable("home") {
                                 val k = rememberScrollState()
                                 Column(modifier = Modifier.verticalScroll(k)) {
+                                    /*
                                     Text("Home screen")
-                                    Text("Message: ${latestMessage.toPrettyString()}")
+                                    Text("Message: ${latestMessage.toPrettyString()}")*/
                                 }
                             }
                             composable("dms") {
                                 DirectMessageScreen(requestViewModel, navController)
+                            }
+                            composable("servers") {
+                                ServerScreen(requestViewModel, navController)
                             }
                         }
                     }
