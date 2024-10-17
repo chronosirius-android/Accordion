@@ -13,7 +13,7 @@ import xyz.chronosirius.accordion.data.DataArray
 import xyz.chronosirius.accordion.viewmodels.RequestViewModel
 
 @Composable
-fun ServerScrxeen(vm: RequestViewModel, navController: NavController) {
+fun ServerScreen(vm: RequestViewModel, navController: NavController) {
     var servers by remember { mutableStateOf(DataArray.empty()) }
 
     LaunchedEffect(true) {

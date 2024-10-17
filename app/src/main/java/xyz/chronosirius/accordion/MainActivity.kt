@@ -9,7 +9,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -105,26 +107,52 @@ class MainActivity : ComponentActivity() {
                         bottomBar = {
                             BottomAppBar(
                                 actions = {
-                                    IconButton(onClick = {
-                                        navController.navigate("home")
-                                        gwObserver.let { DiscordGatewayService.isGatewayConnected.observe(this@MainActivity,it) }
-                                        messageObserver.let { DiscordGatewayService.latestMessage.observe(this@MainActivity, it) }
-                                    }) {
-                                        Icon(Icons.Outlined.Home, contentDescription = "Home")
-                                    }
-                                    IconButton(onClick = {
-                                        // load dms pannel
-                                        navController.navigate("dms")
-                                        gwObserver.let { DiscordGatewayService.isGatewayConnected.removeObserver(it) }
-                                        messageObserver.let { DiscordGatewayService.latestMessage.removeObserver(it) }
-                                    }) {
-                                        Icon(painterResource(R.drawable.chat_bubble), contentDescription = "DMS")
-                                    }
-                                    IconButton(onClick = {
-                                        // load servers pannel
-                                        navController.navigate("servers")
-                                    }) {
-                                        Icon(painterResource(R.drawable.forum), contentDescription = "Servers")
+                                    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+                                        IconButton(onClick = {
+                                            navController.navigate("home")
+                                            gwObserver.let {
+                                                DiscordGatewayService.isGatewayConnected.observe(
+                                                    this@MainActivity,
+                                                    it
+                                                )
+                                            }
+                                            messageObserver.let {
+                                                DiscordGatewayService.latestMessage.observe(
+                                                    this@MainActivity,
+                                                    it
+                                                )
+                                            }
+                                        }) {
+                                            Icon(Icons.Outlined.Home, contentDescription = "Home")
+                                        }
+                                        IconButton(onClick = {
+                                            // load dms pannel
+                                            navController.navigate("dms")
+                                            gwObserver.let {
+                                                DiscordGatewayService.isGatewayConnected.removeObserver(
+                                                    it
+                                                )
+                                            }
+                                            messageObserver.let {
+                                                DiscordGatewayService.latestMessage.removeObserver(
+                                                    it
+                                                )
+                                            }
+                                        }) {
+                                            Icon(
+                                                painterResource(R.drawable.chat_bubble),
+                                                contentDescription = "DMS"
+                                            )
+                                        }
+                                        IconButton(onClick = {
+                                            // load servers pannel
+                                            navController.navigate("servers")
+                                        }) {
+                                            Icon(
+                                                painterResource(R.drawable.forum),
+                                                contentDescription = "Servers"
+                                            )
+                                        }
                                     }
                                 }
                             )
