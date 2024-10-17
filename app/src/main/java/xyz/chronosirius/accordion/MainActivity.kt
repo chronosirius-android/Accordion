@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Observer
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -123,7 +125,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         }) {
-                                            Icon(Icons.Outlined.Home, contentDescription = "Home")
+                                            Icon(Icons.Outlined.Home, contentDescription = "Home", modifier = Modifier.size(64.dp))
                                         }
                                         IconButton(onClick = {
                                             // load dms pannel
@@ -141,7 +143,8 @@ class MainActivity : ComponentActivity() {
                                         }) {
                                             Icon(
                                                 painterResource(R.drawable.chat_bubble),
-                                                contentDescription = "DMS"
+                                                contentDescription = "DMS",
+                                                modifier = Modifier.size(64.dp)
                                             )
                                         }
                                         IconButton(onClick = {
@@ -150,7 +153,8 @@ class MainActivity : ComponentActivity() {
                                         }) {
                                             Icon(
                                                 painterResource(R.drawable.forum),
-                                                contentDescription = "Servers"
+                                                contentDescription = "Servers",
+                                                modifier = Modifier.size(64.dp)
                                             )
                                         }
                                     }
