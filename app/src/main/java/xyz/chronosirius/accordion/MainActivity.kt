@@ -9,10 +9,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,14 +28,18 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Observer
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -96,7 +106,7 @@ class MainActivity : ComponentActivity() {
                         return@Scaffold
                     }
                     Scaffold(
-                        modifier=Modifier.padding(innerPadding),
+                        modifier=Modifier.padding(0.dp),
                         topBar= {
                             if (!gatewayConnected || isRequesting) {
                                 LinearProgressIndicator(modifier=Modifier.fillMaxWidth())
@@ -104,27 +114,62 @@ class MainActivity : ComponentActivity() {
                         },
                         bottomBar = {
                             BottomAppBar(
+                                modifier = Modifier.height(96.dp),
                                 actions = {
-                                    IconButton(onClick = {
-                                        navController.navigate("home")
-                                        gwObserver.let { DiscordGatewayService.isGatewayConnected.observe(this@MainActivity,it) }
-                                        messageObserver.let { DiscordGatewayService.latestMessage.observe(this@MainActivity, it) }
-                                    }) {
-                                        Icon(Icons.Outlined.Home, contentDescription = "Home")
-                                    }
-                                    IconButton(onClick = {
-                                        // load dms pannel
-                                        navController.navigate("dms")
-                                        gwObserver.let { DiscordGatewayService.isGatewayConnected.removeObserver(it) }
-                                        messageObserver.let { DiscordGatewayService.latestMessage.removeObserver(it) }
-                                    }) {
-                                        Icon(painterResource(R.drawable.chat_bubble), contentDescription = "DMS")
-                                    }
-                                    IconButton(onClick = {
-                                        // load servers pannel
-                                        navController.navigate("servers")
-                                    }) {
-                                        Icon(painterResource(R.drawable.forum), contentDescription = "Servers")
+                                    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth().padding(0.dp).fillMaxHeight(), verticalAlignment=Alignment.CenterVertically) {
+                                        IconButton(onClick = {
+                                            navController.navigate("home")
+                                            gwObserver.let {
+                                                DiscordGatewayService.isGatewayConnected.observe(
+                                                    this@MainActivity,
+                                                    it
+                                                )
+                                            }
+                                            messageObserver.let {
+                                                DiscordGatewayService.latestMessage.observe(
+                                                    this@MainActivity,
+                                                    it
+                                                )
+                                            }
+                                        }) {
+                                            Icon(Icons.Outlined.Home, contentDescription = "Home", modifier = Modifier.size(32.dp).fillMaxHeight())
+                                        }
+                                        IconButton(modifier = Modifier.fillMaxHeight(), onClick = {
+                                            // load dms pannel
+                                            navController.navigate("dms")
+                                            gwObserver.let {
+                                                DiscordGatewayService.isGatewayConnected.removeObserver(
+                                                    it
+                                                )
+                                            }
+                                            messageObserver.let {
+                                                DiscordGatewayService.latestMessage.removeObserver(
+                                                    it
+                                                )
+                                            }
+                                        }) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.Center,
+                                                modifier = Modifier.fillMaxHeight()
+                                            ) {
+                                                Icon(
+                                                    painterResource(R.drawable.chat_bubble),
+                                                    contentDescription = "DMS",
+                                                )
+                                                Text(text="DMs", modifier = Modifier.padding(top=4.dp))
+                                            }
+                                        }
+                                        IconButton(onClick = {
+                                            // load servers pannel
+                                            navController.navigate("servers")
+                                        }) {
+                                            Icon(
+                                                painterResource(R.drawable.forum),
+                                                contentDescription = "Servers",
+                                                modifier = Modifier.size(32.dp)
+                                            )
+                                        }
                                     }
                                 }
                             )
