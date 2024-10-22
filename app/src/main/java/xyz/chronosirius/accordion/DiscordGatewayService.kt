@@ -27,9 +27,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import xyz.chronosirius.accordion.data.DataObject
-import xyz.chronosirius.accordion.models.ResumeData
+import xyz.chronosirius.accordion.data.ResumeData
 import kotlin.system.exitProcess
 
 enum class ErrorType(val t: Int) {
@@ -49,11 +50,11 @@ class DiscordGatewayService : LifecycleService() {
 
     private var supervisorJob = SupervisorJob(parent=null)
     companion object {
-        val latestMessage = MutableLiveData(DataObject.empty())
-        val isGatewayConnected = MutableLiveData(false)
-        val wsCloseReason = MutableLiveData<CloseReason?>(null)
-        val otherError = MutableLiveData<Exception?>(null)
-        val errorType = MutableLiveData(ErrorType.NONE)
+        val latestMessage = MutableStateFlow(DataObject.empty())
+        val isGatewayConnected = MutableStateFlow(false)
+        val wsCloseReason = MutableStateFlow<CloseReason?>(null)
+        val otherError = MutableStateFlow<Exception?>(null)
+        val errorType = MutableStateFlow(ErrorType.NONE)
         // TODO("Refactor this to use bindings (bindService + onBind) instead of a publicly accessible MutableLiveData for increased stability + security")
     }
 
@@ -72,6 +73,7 @@ class DiscordGatewayService : LifecycleService() {
             "Discord Gateway Service",
             NotificationManager.IMPORTANCE_MIN
         )
+        channel.setShowBadge(false)
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
         lifecycleScope.launch {

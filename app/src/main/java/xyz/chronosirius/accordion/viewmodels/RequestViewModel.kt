@@ -14,6 +14,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headers
 import io.ktor.util.appendIfNameAbsent
+import kotlinx.coroutines.flow.MutableStateFlow
 import xyz.chronosirius.accordion.data.DataArray
 import xyz.chronosirius.accordion.data.DataObject
 
@@ -26,7 +27,7 @@ class RequestViewModel: ViewModel() {
         // The data that needs to be shared
         var token: String = ""
     }
-    var isRequesting = MutableLiveData<Boolean>(false)
+    var isRequesting = MutableStateFlow<Boolean>(false)
 
     private val client = HttpClient(OkHttp) {
         install(DefaultRequest) {
@@ -39,25 +40,25 @@ class RequestViewModel: ViewModel() {
     }
 
     suspend fun getObject(req: HttpRequestBuilder, onSuccess: (DataObject) -> Unit, onError: (Throwable) -> Unit) {
-        isRequesting.postValue(true)
+        isRequesting.emit(true)
         try {
             val res = client.get(req)
-            isRequesting.postValue(false)
+            isRequesting.emit(false)
             onSuccess(DataObject.fromJson(res.bodyAsBytes()))
         } catch (e: Throwable) {
-            isRequesting.postValue(false)
+            isRequesting.emit(false)
             onError(e)
         }
     }
 
     suspend fun getArray(req: HttpRequestBuilder, onSuccess: (DataArray) -> Unit, onError: (Throwable) -> Unit) {
-        isRequesting.postValue(true)
+        isRequesting.emit(true)
         try {
             val res = client.get(req)
-            isRequesting.postValue(false)
+            isRequesting.emit(false)
             onSuccess(DataArray.fromJson(res.bodyAsText()))
         } catch (e: Throwable) {
-            isRequesting.postValue(false)
+            isRequesting.emit(false)
             onError(e)
         }
     }

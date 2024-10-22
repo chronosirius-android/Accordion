@@ -1,4 +1,4 @@
-package xyz.chronosirius.accordion.models
+package xyz.chronosirius.accordion.data
 
 data class ResumeData(
     var url: String = "wss://gateway.discord.gg/?v=9&encoding=json",

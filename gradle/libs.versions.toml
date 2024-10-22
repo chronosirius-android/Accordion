@@ -1,5 +1,5 @@
 [versions]
-agp = "8.7.0"
+agp = "8.7.1"
 gson = "2.11.0"
 kotlin = "2.0.20"
 coreKtx = "1.13.1"
@@ -11,7 +11,7 @@ kotlinxCoroutinesCore = "1.9.0"
 kotlinxSerializationJson = "1.7.2"
 ktorClientOkhttpVersion = "2.3.12"
 lifecycleRuntimeKtx = "2.8.6"
-activityCompose = "1.9.2"
+activityCompose = "1.9.3"
 composeBom = "2024.09.02"
 jetbrainsKotlinJvm = "2.0.10"
 ktorClientAndroid = "3.0.0"
@@ -23,7 +23,7 @@ jsr305 = "3.0.2"
 trove4j = "20160824"
 trove4jVersion = "3.0.3"
 core = "3.1.0"
-navigationCompose = "2.8.2"
+navigationCompose = "2.8.3"
 navigationFragment = "2.8.2"
 accompanistPermissions = "0.36.0"
 
@@ -35,7 +35,7 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2024.09.03" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2024.10.00" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }

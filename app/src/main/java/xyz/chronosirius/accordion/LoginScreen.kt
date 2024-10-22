@@ -1,4 +1,4 @@
-package xyz.chronosirius.accordion.ui
+package xyz.chronosirius.accordion
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -13,7 +13,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import xyz.chronosirius.accordion.MainActivity
 import kotlin.system.exitProcess
 
 

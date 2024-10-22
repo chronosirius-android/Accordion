@@ -8,7 +8,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,18 +19,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Send
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -40,15 +37,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Observer
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.preference.PreferenceManager
-import xyz.chronosirius.accordion.data.DataObject
-import xyz.chronosirius.accordion.ui.DirectMessageScreen
-import xyz.chronosirius.accordion.ui.LoginScreen
-import xyz.chronosirius.accordion.ui.ServerScreen
+import xyz.chronosirius.accordion.directs.DirectMessageScreen
+import xyz.chronosirius.accordion.servers.ServerScreen
 import xyz.chronosirius.accordion.ui.theme.AccordionTheme
 import xyz.chronosirius.accordion.viewmodels.RequestViewModel
 
@@ -57,30 +52,11 @@ import xyz.chronosirius.accordion.viewmodels.RequestViewModel
 
 class MainActivity : ComponentActivity() {
 
-    var gatewayConnected by mutableStateOf(false)
-    val gwObserver = Observer<Boolean> {
-        gatewayConnected = it
-    }
-
-    var latestMessage by mutableStateOf(DataObject.empty())
-    val messageObserver = Observer<DataObject> {
-        Log.d("MainActivity", "Message received: ${it.toPrettyString()}")
-        latestMessage = it
-    }
-
-    var isRequesting by mutableStateOf(false)
-    val requestObserver = Observer<Boolean> {
-        isRequesting = it
-    }
-
-    val requestViewModel: RequestViewModel by viewModels()
+    val requestViewModel by viewModels<RequestViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        messageObserver.let { DiscordGatewayService.latestMessage.observe(this, it) }
-        gwObserver.let { DiscordGatewayService.isGatewayConnected.observe(this, it) }
-        requestObserver.let { requestViewModel.isRequesting.observe(this, it) }
         setContent {
             AccordionTheme {
                 // Jetpack Compose basically uses lambdas inside lambdas to create UI components
@@ -88,6 +64,9 @@ class MainActivity : ComponentActivity() {
                 // We never need to update these components manually, the system will do it for us
                 // when it detects a change in a value it triggers a recomposition
                 // and redraws the screen with the new values/data
+                val gatewayConnected by DiscordGatewayService.isGatewayConnected.collectAsStateWithLifecycle()
+                val isRequesting by requestViewModel.isRequesting.collectAsStateWithLifecycle()
+                val latestMessage by DiscordGatewayService.latestMessage.collectAsStateWithLifecycle()
                 var startService = true
                 val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
                 for (t in am.getRunningServices(Integer.MAX_VALUE)) {
@@ -106,7 +85,7 @@ class MainActivity : ComponentActivity() {
                         return@Scaffold
                     }
                     Scaffold(
-                        modifier=Modifier.padding(0.dp),
+                        modifier=Modifier.padding(innerPadding),
                         topBar= {
                             if (!gatewayConnected || isRequesting) {
                                 LinearProgressIndicator(modifier=Modifier.fillMaxWidth())
@@ -119,34 +98,13 @@ class MainActivity : ComponentActivity() {
                                     Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth().padding(0.dp).fillMaxHeight(), verticalAlignment=Alignment.CenterVertically) {
                                         IconButton(onClick = {
                                             navController.navigate("home")
-                                            gwObserver.let {
-                                                DiscordGatewayService.isGatewayConnected.observe(
-                                                    this@MainActivity,
-                                                    it
-                                                )
-                                            }
-                                            messageObserver.let {
-                                                DiscordGatewayService.latestMessage.observe(
-                                                    this@MainActivity,
-                                                    it
-                                                )
-                                            }
                                         }) {
                                             Icon(Icons.Outlined.Home, contentDescription = "Home", modifier = Modifier.size(32.dp).fillMaxHeight())
                                         }
                                         IconButton(modifier = Modifier.fillMaxHeight(), onClick = {
                                             // load dms pannel
                                             navController.navigate("dms")
-                                            gwObserver.let {
-                                                DiscordGatewayService.isGatewayConnected.removeObserver(
-                                                    it
-                                                )
-                                            }
-                                            messageObserver.let {
-                                                DiscordGatewayService.latestMessage.removeObserver(
-                                                    it
-                                                )
-                                            }
+
                                         }) {
                                             Column(
                                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -175,20 +133,26 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     ) { innerPadding ->
-                        NavHost(navController, startDestination = "home", modifier = Modifier.padding(innerPadding)) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = "home",
+                            modifier = Modifier.padding(innerPadding),
+                            enterTransition = { slideInVertically() },
+                            exitTransition = { ExitTransition.None },
+                        ) {
                             composable("home") {
                                 val k = rememberScrollState()
                                 Column(modifier = Modifier.verticalScroll(k)) {
-                                    /*
+
                                     Text("Home screen")
-                                    Text("Message: ${latestMessage.toPrettyString()}")*/
+                                    Text("Message: ${latestMessage.toPrettyString()}")
                                 }
                             }
                             composable("dms") {
-                                DirectMessageScreen(requestViewModel, navController)
+                                DirectMessageScreen(navController)
                             }
                             composable("servers") {
-                                ServerScreen(requestViewModel, navController)
+                                ServerScreen(navController)
                             }
                         }
                     }
@@ -223,15 +187,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         Log.d("MainActivity", "onPause")
-        gwObserver.let { DiscordGatewayService.isGatewayConnected.removeObserver(it) }
-        messageObserver.let { DiscordGatewayService.latestMessage.removeObserver(it) }
         return super.onPause()
     }
 
     override fun onResume() {
         Log.d("MainActivity", "onResume")
-        messageObserver.let { DiscordGatewayService.latestMessage.observe(this, it) }
-        gwObserver.let { DiscordGatewayService.isGatewayConnected.observe(this, it) }
         return super.onResume()
     }
 

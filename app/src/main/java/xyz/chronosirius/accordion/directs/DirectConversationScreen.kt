@@ -1,4 +1,4 @@
-package xyz.chronosirius.accordion.ui
+package xyz.chronosirius.accordion.directs
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
