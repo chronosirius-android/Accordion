@@ -1,9 +1,9 @@
 package xyz.chronosirius.accordion.global_models
 
 abstract class Snowflaked {
-    abstract val id: Int
+    abstract val id: String
 
     fun getTimestamp(): Long {
-        return (id shr 22) + 1420070400000
+        return (id.toInt() shr 22) + 1420070400000
     }
 }

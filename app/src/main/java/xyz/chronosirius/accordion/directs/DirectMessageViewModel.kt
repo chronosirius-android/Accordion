@@ -11,6 +11,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import xyz.chronosirius.accordion.global_models.Message
 import xyz.chronosirius.accordion.global_models.User
 
 class DirectMessageViewModel(token: String): ViewModel() {
@@ -55,8 +56,8 @@ class DMChannel(
         var token: String = ""
     }
 
-//    fun sendMessage(message: Message) {
-//        // This will send a message to the channel
-//
-//    }
+    fun sendMessage(message: Message) {
+        // This will send a message to the channel
+
+    }
 }
