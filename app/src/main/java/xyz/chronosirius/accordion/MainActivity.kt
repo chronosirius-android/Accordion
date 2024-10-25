@@ -22,14 +22,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -92,6 +96,28 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         bottomBar = {
+                            var selectedItem by remember { mutableIntStateOf(0) }
+                            val items = listOf("Home", "DMS", "Servers")
+                            val selectedIcons = listOf(painterResource(R.drawable.home_filled), painterResource(R.drawable.chat_bubble_filled), painterResource(R.drawable.forum_filled))
+                            val unselectedIcons =
+                                listOf(painterResource(R.drawable.home_outlined), painterResource(R.drawable.chat_bubble_outlined), painterResource(R.drawable.forum_outlined))
+
+                            NavigationBar {
+                                items.forEachIndexed { index, item ->
+                                    NavigationBarItem(
+                                        icon = {
+                                            Icon(
+                                                (if (selectedItem == index) selectedIcons[index] else unselectedIcons[index]),
+                                                contentDescription = item
+                                            )
+                                        },
+                                        label = { Text(item) },
+                                        selected = selectedItem == index,
+                                        onClick = { selectedItem = index }
+                                    )
+                                }
+                            }
+                            /*
                             BottomAppBar(
                                 modifier = Modifier.height(96.dp),
                                 actions = {
@@ -130,7 +156,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 }
-                            )
+                            )*/
                         }
                     ) { innerPadding ->
                         NavHost(
