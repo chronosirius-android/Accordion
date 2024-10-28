@@ -113,55 +113,17 @@ class MainActivity : ComponentActivity() {
                                         },
                                         label = { Text(item) },
                                         selected = selectedItem == index,
-                                        onClick = { selectedItem = index }
+                                        onClick = {
+                                            selectedItem = index
+                                        }
                                     )
                                 }
                             }
-                            /*
-                            BottomAppBar(
-                                modifier = Modifier.height(96.dp),
-                                actions = {
-                                    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth().padding(0.dp).fillMaxHeight(), verticalAlignment=Alignment.CenterVertically) {
-                                        IconButton(onClick = {
-                                            navController.navigate("home")
-                                        }) {
-                                            Icon(Icons.Outlined.Home, contentDescription = "Home", modifier = Modifier.size(32.dp).fillMaxHeight())
-                                        }
-                                        IconButton(modifier = Modifier.fillMaxHeight(), onClick = {
-                                            // load dms pannel
-                                            navController.navigate("dms")
-
-                                        }) {
-                                            Column(
-                                                horizontalAlignment = Alignment.CenterHorizontally,
-                                                verticalArrangement = Arrangement.Center,
-                                                modifier = Modifier.fillMaxHeight()
-                                            ) {
-                                                Icon(
-                                                    painterResource(R.drawable.chat_bubble),
-                                                    contentDescription = "DMS",
-                                                )
-                                                Text(text="DMs", modifier = Modifier.padding(top=4.dp))
-                                            }
-                                        }
-                                        IconButton(onClick = {
-                                            // load servers pannel
-                                            navController.navigate("servers")
-                                        }) {
-                                            Icon(
-                                                painterResource(R.drawable.forum),
-                                                contentDescription = "Servers",
-                                                modifier = Modifier.size(32.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            )*/
                         }
                     ) { innerPadding ->
                         NavHost(
                             navController = navController,
-                            startDestination = "home",
+                            startDestination = "dms",
                             modifier = Modifier.padding(innerPadding),
                             enterTransition = { slideInVertically() },
                             exitTransition = { ExitTransition.None },

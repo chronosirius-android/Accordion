@@ -1,6 +1,8 @@
 package xyz.chronosirius.accordion.servers
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -8,7 +10,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import xyz.chronosirius.accordion.R
 import xyz.chronosirius.accordion.data.DataArray
 
 @Composable
@@ -27,5 +32,10 @@ fun ServerScreen(navController: NavController) {
 
     Column {
         Text("Servers")
+        Spacer(modifier = Modifier.weight(1f))
+        Icon(
+            painter = painterResource(R.drawable.search),
+            contentDescription = "Search"
+        )
     }
 }
