@@ -25,7 +25,7 @@ fun ConversationScreen(channelId: Int, vm: RequestViewModel, navController: NavC
         // will load a conversation screen fragment with the messages once loaded
         // vm.get { url("https://discord.com/api/v9/users/@me/channels") }
     }
-    Row (modifier = Modifier.padding(5.dp)) {
+    Row (modifier = Modifier.padding(10.dp)) {
         Text("Chronosirirus")
         Spacer(modifier = Modifier.weight(1f))
         Icon(
