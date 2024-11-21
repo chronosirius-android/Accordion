@@ -46,6 +46,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.preference.PreferenceManager
+import xyz.chronosirius.accordion.directs.ConversationScreen
 import xyz.chronosirius.accordion.directs.DirectMessageScreen
 import xyz.chronosirius.accordion.servers.ServerScreen
 import xyz.chronosirius.accordion.ui.theme.AccordionTheme
@@ -123,7 +124,7 @@ class MainActivity : ComponentActivity() {
                     ) { innerPadding ->
                         NavHost(
                             navController = navController,
-                            startDestination = "dms",
+                            startDestination = "dm-conversation",
                             modifier = Modifier.padding(innerPadding),
                             enterTransition = { slideInVertically() },
                             exitTransition = { ExitTransition.None },
@@ -141,6 +142,9 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("servers") {
                                 ServerScreen(navController)
+                            }
+                            composable("dm-conversation") {
+                                ConversationScreen(1, requestViewModel, navController)
                             }
                         }
                     }
