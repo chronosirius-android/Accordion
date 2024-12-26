@@ -1,4 +1,4 @@
-package xyz.chronosirius.accordion
+package xyz.chronosirius.accordion.gateway
 
 import android.content.BroadcastReceiver
 import android.content.Context

@@ -1,4 +1,4 @@
-package xyz.chronosirius.accordion
+package xyz.chronosirius.accordion.gateway
 
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -10,7 +10,6 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import io.ktor.client.*
@@ -29,6 +28,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import xyz.chronosirius.accordion.R
 import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.data.ResumeData
 import kotlin.system.exitProcess
@@ -166,6 +166,7 @@ class DiscordGatewayService : LifecycleService() {
                                 }
                             }
                         } // End heartBeatJob
+
                         for (frame in incoming) {
                             if (incoming.isClosedForReceive) {
                                 Log.e("DiscordGatewayService", "Incoming is closed")

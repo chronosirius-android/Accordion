@@ -8,13 +8,15 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.CreationExtras
 import xyz.chronosirius.accordion.data.DataArray
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun DirectMessageScreen(navController: NavController) {
-    val vm = viewModel<DirectMessageViewModel>()
+fun DirectMessageScreen(vm: DirectMessageViewModel, navController: NavController) {
     val isUnloaded by vm.isUnloaded.collectAsStateWithLifecycle()
     if (isUnloaded) {
         LaunchedEffect(true) {

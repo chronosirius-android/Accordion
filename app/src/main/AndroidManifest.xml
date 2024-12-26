@@ -21,14 +21,14 @@
         android:largeHeap="true"
         tools:targetApi="31">
         <service
-            android:name=".DiscordGatewayService"
+            android:name=".gateway.DiscordGatewayService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Maintains a connection to the Discord Gateway"/>
         </service>
-        <receiver android:name=".DiscordGatewayLauncher"
+        <receiver android:name=".gateway.DiscordGatewayLauncher"
             android:exported="false"
             android:enabled="true">
             <intent-filter>

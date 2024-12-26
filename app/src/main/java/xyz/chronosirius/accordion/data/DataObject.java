@@ -248,6 +248,10 @@ public class DataObject implements SerializableData
         return optObject(key).orElseThrow(() -> valueError(key, "DataObject"));
     }
 
+    public DataObject getObjectOrNull(@Nonnull String key) {
+        return optObject(key).orElse(null);
+    }
+
     /**
      * Resolves a DataObject to a key.
      *

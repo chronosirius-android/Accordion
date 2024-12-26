@@ -18,4 +18,19 @@ class User(
     val clan: Any?,
     val bot: Boolean
 ): UserBase() {
+    companion object {
+        fun fromJson(json: DataObject): User {
+            return User(
+                json.getString("id"),
+                json.getString("username"),
+                json.getString("global_name"),
+                json.getString("avatar"),
+                json.getObjectOrNull("avatar_decoration_data"),
+                json.getString("discriminator"),
+                json.getInt("public_flags"),
+                json.getObjectOrNull("clan"),
+                json.getBoolean("bot")
+            )
+        }
+    }
 }

@@ -30,9 +30,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -41,8 +38,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.preference.PreferenceManager
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import xyz.chronosirius.accordion.directs.DirectMessageScreen
+import xyz.chronosirius.accordion.gateway.DiscordGatewayService
 import xyz.chronosirius.accordion.servers.ServerScreen
 import xyz.chronosirius.accordion.ui.theme.AccordionTheme
 import xyz.chronosirius.accordion.viewmodels.RequestViewModel
@@ -54,36 +52,47 @@ class MainActivity : ComponentActivity() {
 
     val requestViewModel by viewModels<RequestViewModel>()
 
+    @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        var startService = true
+        val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        for (t in am.getRunningServices(Integer.MAX_VALUE)) {
+            if (t.service.className == DiscordGatewayService::class.java.name) {
+                Log.d("MainActivity", "Service already running")
+                startService = false
+            }
+        }
+        if (startService) startForegroundService(Intent(this, DiscordGatewayService::class.java))
         setContent {
             AccordionTheme {
                 // Jetpack Compose basically uses lambdas inside lambdas to create UI components
                 // which the Android system will render
                 // We never need to update these components manually, the system will do it for us
-                // when it detects a change in a value it triggers a recomposition
+                // whuen it detects a change in a value it triggers a recomposition
                 // and redraws the screen with the new values/data
-                val gatewayConnected by DiscordGatewayService.isGatewayConnected.collectAsStateWithLifecycle()
+                val gatewayConnected by DiscordGatewayService.Companion.isGatewayConnected.collectAsStateWithLifecycle()
                 val isRequesting by requestViewModel.isRequesting.collectAsStateWithLifecycle()
-                val latestMessage by DiscordGatewayService.latestMessage.collectAsStateWithLifecycle()
-                var startService = true
-                val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-                for (t in am.getRunningServices(Integer.MAX_VALUE)) {
-                    if (t.service.className == DiscordGatewayService::class.java.name) {
-                        Log.d("MainActivity", "Service already running")
-                        startService = false
-                    }
-                }
-                if (startService) startForegroundService(Intent(this, DiscordGatewayService::class.java))
-                var loggedIn by remember { mutableStateOf<Boolean>(true) }
+                val latestMessage by DiscordGatewayService.Companion.latestMessage.collectAsStateWithLifecycle()
+
+                
+//                var onboardingStage by remember { mutableIntStateOf(PreferenceManager.getDefaultSharedPreferences(this).getInt("appOnboardingStage", 0)) }
+//                if (onboardingStage <= 8) {
+//                    OnboardingScreen(onboardingStage = onboardingStage) {
+//                        PreferenceManager.getDefaultSharedPreferences(this).edit().putInt("appOnboardingStage", it).apply()
+//                        onboardingStage = it
+//                    }
+//                    return@AccordionTheme
+//                }
+                //var loggedIn by remember { mutableStateOf<Boolean>(true) }
                 //loggedIn = PreferenceManager.getDefaultSharedPreferences(this).getString("token", null) != null
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val navController = rememberNavController()
-                    if (!loggedIn) {
-                        LoginScreen(sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this@MainActivity), context = this@MainActivity)
-                        return@Scaffold
-                    }
+//                    if (!loggedIn) {
+//                        LoginScreen(sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this@MainActivity), context = this@MainActivity)
+//                        return@Scaffold
+//                    }
                     Scaffold(
                         modifier=Modifier.padding(innerPadding),
                         topBar= {
@@ -149,7 +158,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             composable("dms") {
-                                DirectMessageScreen(navController)
+                                DirectMessageScreen()
                             }
                             composable("servers") {
                                 ServerScreen(navController)
