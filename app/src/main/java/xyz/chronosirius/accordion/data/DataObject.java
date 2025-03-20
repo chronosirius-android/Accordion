@@ -16,12 +16,8 @@
 
 package xyz.chronosirius.accordion.data;
 
-import com.fasterxml.jackson.core.FormatFeature;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.json.JsonWriteFeature;
-import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -31,15 +27,25 @@ import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.*;
-import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.UncheckedIOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Represents a map of values used in communication with the Discord API.
@@ -248,6 +254,12 @@ public class DataObject implements SerializableData
         return optObject(key).orElseThrow(() -> valueError(key, "DataObject"));
     }
 
+    @Nullable
+    public DataObject getObject(@Nonnull String key, DataObject defaultValue)
+    {
+        return optObject(key).orElse(defaultValue);
+    }
+
     /**
      * Resolves a DataObject to a key.
      *
@@ -290,6 +302,16 @@ public class DataObject implements SerializableData
     public DataArray getArray(@Nonnull String key)
     {
         return optArray(key).orElseThrow(() -> valueError(key, "DataArray"));
+    }
+
+    public List<DataObject> getObjectArray(@Nonnull String key)
+    {
+        DataArray da = getArray(key);
+        List<DataObject> result = new ArrayList<>();
+        for (int i=0; i < da.length(); i++) {
+            result.add(da.getObject(i));
+        }
+        return result;
     }
 
     /**

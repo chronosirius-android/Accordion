@@ -1,31 +1,31 @@
 [versions]
-agp = "8.7.1"
+agp = "8.9.0"
 gson = "2.11.0"
-kotlin = "2.0.20"
-coreKtx = "1.13.1"
+kotlin = "2.1.0"
+coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-kotlinxCoroutinesAndroid = "1.9.0"
-kotlinxCoroutinesCore = "1.9.0"
+kotlinxCoroutinesAndroid = "1.10.1"
+kotlinxCoroutinesCore = "1.10.1"
 kotlinxSerializationJson = "1.7.2"
 ktorClientOkhttpVersion = "2.3.12"
-lifecycleRuntimeKtx = "2.8.6"
-activityCompose = "1.9.3"
+lifecycleRuntimeKtx = "2.8.7"
+activityCompose = "1.10.1"
 composeBom = "2024.09.02"
 jetbrainsKotlinJvm = "2.0.10"
-ktorClientAndroid = "3.0.0"
-lifecycleService = "2.8.6"
+ktorClientAndroid = "3.1.1"
+lifecycleService = "2.8.7"
 preferenceKtx = "1.2.1"
-jacksonCore = "2.18.0"
-jacksonDatabind = "2.18.0"
+jacksonCore = "2.18.3"
+jacksonDatabind = "2.18.3"
 jsr305 = "3.0.2"
 trove4j = "20160824"
 trove4jVersion = "3.0.3"
 core = "3.1.0"
-navigationCompose = "2.8.3"
+navigationCompose = "2.8.9"
 navigationFragment = "2.8.2"
-accompanistPermissions = "0.36.0"
+accompanistPermissions = "0.37.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -35,7 +35,7 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2024.10.00" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version = "2025.03.00" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }

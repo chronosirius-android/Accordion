@@ -5,16 +5,15 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
 }
 
-val ktor_version by extra("3.0.0-rc-1")
 
 android {
     namespace = "xyz.chronosirius.accordion"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "xyz.chronosirius.accordion"
         minSdk = 33
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 

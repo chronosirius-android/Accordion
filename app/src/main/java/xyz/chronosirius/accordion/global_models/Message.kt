@@ -1,11 +1,10 @@
 package xyz.chronosirius.accordion.global_models
 
-import androidx.compose.runtime.Composable
 import io.ktor.client.HttpClient
 import xyz.chronosirius.accordion.data.DataObject
 
 class Message(
-    override val id: String,
+    override val id: Long,
     val channelId: String,
     val author: UserBase,
     val content: String,
@@ -39,8 +38,8 @@ class Message(
     val roleSubscriptionData: DataObject?,
     val resolved: DataObject?,
     val poll: DataObject?,
-    val call: DataObject?,
-    val client: HttpClient
+    val call: DataObject?
 ): Snowflaked() {
 
 }
+

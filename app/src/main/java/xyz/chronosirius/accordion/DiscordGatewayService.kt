@@ -10,10 +10,9 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import io.ktor.client.*
+import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocket
@@ -55,12 +54,12 @@ class DiscordGatewayService : LifecycleService() {
         val wsCloseReason = MutableStateFlow<CloseReason?>(null)
         val otherError = MutableStateFlow<Exception?>(null)
         val errorType = MutableStateFlow(ErrorType.NONE)
+        const val testToken = ""
         // TODO("Refactor this to use bindings (bindService + onBind) instead of a publicly accessible MutableLiveData for increased stability + security")
     }
 
     private val resumeData = ResumeData()
 
-    private val testToken = ""
     override fun onBind(intent: Intent): IBinder {
         val a = super.onBind(intent)
         TODO("Return the communication channel to the service.")
