@@ -1,8 +1,10 @@
 package xyz.chronosirius.accordion
 
+import android.content.Context
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -14,7 +16,7 @@ import xyz.chronosirius.accordion.directs.DirectMessageScreen
 import xyz.chronosirius.accordion.servers.ServerScreen
 
 @Composable
-fun MainNavPoint(navController: NavHostController, modifier: Modifier = Modifier) {
+fun MainNavPoint(navController: NavHostController, context: Context, modifier: Modifier = Modifier) {
     NavHost(
         navController = navController,
         startDestination = "DMS",
@@ -31,7 +33,7 @@ fun MainNavPoint(navController: NavHostController, modifier: Modifier = Modifier
             }
         ) {
             composable("conversation_list") {
-                DirectMessageScreen(navController, it.sharedViewModel(navController))
+                DirectMessageScreen(navController, it.sharedViewModel(navController), context)
             }
 
             composable("channels/{channelId}",
@@ -48,6 +50,7 @@ fun MainNavPoint(navController: NavHostController, modifier: Modifier = Modifier
                 }
             }
         }
+
         navigation(
             route = "servers",
             startDestination = "server_list",
@@ -74,6 +77,15 @@ fun MainNavPoint(navController: NavHostController, modifier: Modifier = Modifier
                     val channelId = backStackEntry.arguments?.getString("channelId")?.toInt()
                     ChannelScreen(navController, serverId!!, channelId!!)
                 }
+            }
+        }
+
+        navigation(
+            route = "profile",
+            startDestination = "my_profile"
+        ) {
+            composable("my_profile") {
+                Text("Profile")
             }
         }
     }

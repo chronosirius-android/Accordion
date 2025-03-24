@@ -1,6 +1,7 @@
 package xyz.chronosirius.accordion
 
 import android.app.ActivityManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -29,6 +30,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,7 +43,9 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.flow.asStateFlow
 import xyz.chronosirius.accordion.ui.theme.AccordionTheme
+import xyz.chronosirius.accordion.viewmodels.AccordionViewModel
 
 // UI components file
 // https://developer.android.com/develop/ui/compose/documentation
@@ -76,9 +80,16 @@ class MainActivity : ComponentActivity() {
                 val currentDestination = currentBackStack?.destination?.route
                 Log.d("MainActivity", "Current destination: $currentDestination")
 
+                val isNotConnected = currentBackStack?.sharedViewModel<AccordionViewModel>(navController)?.isRequesting?.collectAsState()
+                Log.d("MainActivity", "isNotConnected: ${isNotConnected?.value}")
                 Scaffold(
                     topBar = @Composable {
-                        LinearProgressIndicator(modifier=Modifier.fillMaxWidth())
+                        if (isNotConnected?.value == true) {
+                            Log.d("MainActivity", "Showing progress bar")
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        } else {
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
                         Spacer(modifier = Modifier.height(20.dp))
                     },
                     bottomBar = @Composable {
@@ -95,30 +106,35 @@ class MainActivity : ComponentActivity() {
                                     unselectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer
                                 ),
                                 icon = {
-                                    if (currentDestination?.contains("servers") == true)
+                                    if (currentBackStack?.destination?.parent?.route == "servers")
                                         Icon(Icons.Filled.Home, contentDescription = "Servers")
                                     else
                                         Icon(Icons.Outlined.Home, contentDescription = "Servers")
                                 },
                                 label = { Text("Servers") },
-                                selected = currentDestination == "servers",
+                                selected = currentBackStack?.destination?.parent?.route == "servers",
                                 onClick = {
                                     navController.navigate("servers") {
-
                                         launchSingleTop = true
                                         restoreState = true
                                     }
                                 }
                             )
                             NavigationBarItem(
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ),
                                 icon = {
-                                    if (currentDestination == "DMS")
+                                    if (currentBackStack?.destination?.parent?.route == "DMS")
                                         Icon(painterResource(R.drawable.forum_filled), contentDescription = "DMS")
                                     else
                                         Icon(painterResource(R.drawable.forum_outlined), contentDescription = "DMS")
                                 },
                                 label = { Text("DMS") },
-                                selected = currentDestination == "DMS",
+                                selected = currentBackStack?.destination?.parent?.route == "DMS",
                                 onClick = {
                                     Log.d("MainActivity", "Navigating to DMS")
                                     navController.navigate("DMS") {
@@ -128,15 +144,21 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                             NavigationBarItem(
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ),
                                 icon = {
-                                    if (currentDestination == "profile") {
+                                    if (currentBackStack?.destination?.parent?.route == "profile") {
                                         Icon(Icons.Filled.Face, contentDescription = "Profile")
                                     } else {
                                         Icon(Icons.Outlined.Face, contentDescription = "Profile")
                                     }
                                 },
                                 label = { Text("Profile") },
-                                selected = currentDestination == "profile",
+                                selected = currentBackStack?.destination?.parent?.route == "profile",
                                 onClick = {
                                     navController.navigate("profile") {
                                         launchSingleTop = true
@@ -148,7 +170,7 @@ class MainActivity : ComponentActivity() {
                     },
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    MainNavPoint(navController, modifier=Modifier.padding(it).fillMaxSize())
+                    MainNavPoint(navController, this as Context, modifier=Modifier.padding(it).fillMaxSize())
                 }
             }
         }

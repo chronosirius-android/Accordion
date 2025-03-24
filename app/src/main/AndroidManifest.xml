@@ -19,6 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Accordion"
         android:largeHeap="true"
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
         <service
             android:name=".DiscordGatewayService"
