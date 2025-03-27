@@ -8,22 +8,24 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.createBitmap
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.periodUntil
 import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.viewmodels.AccordionViewModel
 import java.io.ByteArrayOutputStream
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 class DMChannel(
     override val id: Long,
@@ -74,15 +76,13 @@ class DMChannel(
         }
     }
 
-    fun lastMessageTime(): LocalDateTime {
-        val lastMessageUnix = (lastMessageId.toLong() shr 22) + 1420070400000
-        val lastMessageInstant = Instant.ofEpochMilli(lastMessageUnix)
-        return ZonedDateTime.ofInstant(lastMessageInstant, ZoneOffset.UTC).withZoneSameInstant(
-            ZoneId.systemDefault()).toLocalDateTime()
-    }
-
     fun lastMessageTimeUnix(): Long {
         return (lastMessageId.toLong() shr 22) + 1420070400000
+    }
+
+    fun timeSinceLastMessage(): DateTimePeriod {
+        return (System.currentTimeMillis() - lastMessageTimeUnix()).toDuration(DurationUnit.MILLISECONDS)
+            .toDateTimePeriod(Instant.fromEpochMilliseconds(lastMessageTimeUnix()), TimeZone.currentSystemDefault())
     }
 
     @Composable
@@ -124,4 +124,8 @@ class DMChannel(
 
         Image(bitmap = image.asImageBitmap(), contentDescription = "Channel Icon", modifier)
     }
+}
+
+fun Duration.toDateTimePeriod(instant: Instant, timeZone: TimeZone): DateTimePeriod {
+    return instant.periodUntil(instant + this, timeZone)
 }

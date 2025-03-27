@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -90,11 +91,29 @@ fun DirectMessageScreen(navController: NavController, vm: AccordionViewModel, ct
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Log.d("DirectMessageScreen", "channel.id: ${channel.id} channel.recipients: ${channel.recipients}")
-                        Text(channel.name(), fontWeight = FontWeight.Bold, overflow = TextOverflow.Ellipsis)
+                        Text(channel.name(), fontWeight = FontWeight.Bold, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(
+                            200.dp), maxLines = 1)
                         Text("user status", fontSize = 3.em)
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(channel.lastMessageTime().dayOfMonth.toString())
+                    channel.timeSinceLastMessage().also { since ->
+                        var time: String =
+                            if (since.years > 0) {
+                                "${since.years}y"
+                            } else if (since.months > 0) {
+                                "${since.months}mo"
+                            } else if (since.days > 0) {
+                                "${since.days}d"
+                            } else if (since.hours > 0) {
+                                "${since.hours}h"
+                            } else if (since.minutes > 0) {
+                                "${since.minutes}m"
+                            } else {
+                                "now"
+                            }
+                        Text(time, fontSize = 3.em, textAlign = TextAlign.Right, modifier = Modifier.absolutePadding(0.dp, 0.dp, 5.dp, 0.dp).width(35.dp))
+                    }
+
                 }
             }
         }

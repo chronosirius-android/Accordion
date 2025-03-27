@@ -1,7 +1,6 @@
 package xyz.chronosirius.accordion.viewmodels
 
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -21,7 +20,6 @@ import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.appendPathSegments
-import io.ktor.http.set
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -175,10 +173,7 @@ class AccordionViewModel: ViewModel() {
     fun getDefaultAvatar(userId: Long): Int {
         // This will return a default avatar for the user
         // based on their user ID
-        var defaultAvatarIndex = (userId % 5)
-        if (Math.random() < 0.01) {
-            defaultAvatarIndex += (0..1).random()
-        }
+        var defaultAvatarIndex = userId shr 22 % 6
 
         return when (defaultAvatarIndex) {
             0L -> R.drawable.default_avatar_0
