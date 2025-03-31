@@ -78,6 +78,16 @@ class DiscordGatewayService : LifecycleService() {
         channel.setShowBadge(false)
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.createNotificationChannel(channel)
+        ServiceCompat.startForeground(
+            this,
+            1,
+            NotificationCompat.Builder(this, "gateway")
+                .setContentTitle("Discord Gateway Service")
+                .setContentText("Connecting to Discord Gateway")
+                .setSmallIcon(R.drawable.compare_arrows)
+                .build(),
+            FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        )
         lifecycleScope.launch {
             while (resumeData.shouldReconnect) {
                 Log.d("DiscordGatewayService/ResumeData", resumeData.toString())
@@ -246,15 +256,12 @@ class DiscordGatewayService : LifecycleService() {
                 resumeData.shouldReconnect = true
                 Log.d("DiscordGatewayService", "Resume data: $resumeData")
                 Log.d("DiscordGatewayService/DISPATCH", "READY! $payload")
-                ServiceCompat.startForeground(
-                    this,
-                    1,
+                applicationContext.getSystemService(NotificationManager::class.java).notify(1,
                     NotificationCompat.Builder(this, "gateway")
                         .setContentTitle("Discord Gateway Service")
                         .setContentText("Connected to Discord Gateway")
                         .setSmallIcon(R.drawable.compare_arrows)
-                        .build(),
-                    FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                        .build()
                 )
             }
             "MESSAGE_CREATE" -> {

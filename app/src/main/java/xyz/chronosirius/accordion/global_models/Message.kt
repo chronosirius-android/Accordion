@@ -3,6 +3,28 @@ package xyz.chronosirius.accordion.global_models
 import io.ktor.client.HttpClient
 import xyz.chronosirius.accordion.data.DataObject
 
+class TempMessage(
+    override val id: Long,
+    val content: String,
+    val channelId: String,
+    val author: UserBase,
+    val editedTimestamp: String?,
+    val flags: Int
+): Snowflaked() {
+    companion object {
+        fun fromJson(da: DataObject): TempMessage {
+            return TempMessage(
+                da.getLong("id"),
+                da.getString("content"),
+                da.getString("channel_id"),
+                User.fromJson(da.getObject("author")),
+                da.getString("edited_timestamp", null),
+                da.getInt("flags")
+            )
+        }
+    }
+}
+
 class Message(
     override val id: Long,
     val channelId: String,
@@ -40,6 +62,53 @@ class Message(
     val poll: DataObject?,
     val call: DataObject?
 ): Snowflaked() {
+    companion object {
+        fun fromJson(data: DataObject): Message {
+            return Message(
+                id = data.getLong("id"),
+                channelId = data.getString("channel_id"),
+                author = User.fromJson(data.getObject("author")),
+                content = data.getString("content"),
+                timestamp = data.getString("timestamp"),
+                editedTimestamp = data.getString("edited_timestamp"),
+                tts = false,
+                mentionEveryone = data.getBoolean("mention_everyone"),
+                mentions = data.getString("mentions").let { mentions ->
+                    if (mentions.isEmpty()) {
+                        emptyList()
+                    } else {
+                        mentions.split(",").map { User.fromJson(data.getObject(it)) }
+                    }
+                },
+                mentionRoles = TODO(),
+                mentionChannels = TODO(),
+                attachments = TODO(),
+                embeds = TODO(),
+                reactions = TODO(),
+                nonce = TODO(),
+                pinned = TODO(),
+                webhookId = TODO(),
+                type = TODO(),
+                activity = TODO(),
+                application = TODO(),
+                applicationId = TODO(),
+                flags = TODO(),
+                messageReference = TODO(),
+                messageSnapshots = TODO(),
+                referencedMessage = TODO(),
+                interactionMetadata = TODO(),
+                thread = TODO(),
+                components = TODO(),
+                stickerItems = TODO(),
+                stickers = TODO(),
+                position = TODO(),
+                roleSubscriptionData = TODO(),
+                resolved = TODO(),
+                poll = TODO(),
+                call = TODO(),
+            )
+        }
+    }
 
 }
 

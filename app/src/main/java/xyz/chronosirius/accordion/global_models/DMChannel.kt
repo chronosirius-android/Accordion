@@ -65,14 +65,10 @@ class DMChannel(
     }
 
     fun name(): String {
-        try {
-            if (name != null) {
-                return name
-            } else {
-                return recipients[0].username
-            }
+        return try {
+            name ?: recipients[0].username
         } catch (_: Exception) {
-            return id.toString()
+            id.toString()
         }
     }
 

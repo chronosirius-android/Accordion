@@ -23,11 +23,14 @@ import io.ktor.http.appendPathSegments
 import io.ktor.util.appendIfNameAbsent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import xyz.chronosirius.accordion.DiscordGatewayService
 import xyz.chronosirius.accordion.R
 import xyz.chronosirius.accordion.data.DataArray
 import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.global_models.DMChannel
+import xyz.chronosirius.accordion.global_models.Message
+import xyz.chronosirius.accordion.global_models.TempMessage
 import java.io.File
 
 class AccordionViewModel: ViewModel() {
@@ -39,9 +42,18 @@ class AccordionViewModel: ViewModel() {
         // The data that needs to be shared
         var token: String = ""
     }
-    var isRequesting = MutableStateFlow<Boolean>(false)
-    private var _channels = mutableStateListOf<DMChannel>()
+    private val _isRequesting = MutableStateFlow<Boolean>(false)
+    val isRequesting = _isRequesting.asStateFlow()
+    private val _error: MutableStateFlow<Throwable?> = MutableStateFlow(null);
+    val error = _error.asStateFlow()
+    private val _isPulling = MutableStateFlow<Boolean>(false)
+    val isPulling = _isPulling.asStateFlow()
+
+    private val _channels = mutableStateListOf<DMChannel>()
     val channels: List<DMChannel> = _channels
+    
+    private val _messages = mutableStateListOf<TempMessage>()
+    val messages: List<TempMessage> = _messages
 
     private val client = HttpClient(OkHttp) {
         defaultRequest {
@@ -55,34 +67,39 @@ class AccordionViewModel: ViewModel() {
     }
 
     suspend fun getObject(req: HttpRequestBuilder, onSuccess: (DataObject) -> Unit, onError: (Throwable) -> Unit) {
-        isRequesting.emit(true)
+        _isRequesting.emit(true)
         try {
             val res = client.get(req)
-            isRequesting.emit(false)
+            _isRequesting.emit(false)
+            _error.emit(null)
             onSuccess(DataObject.fromJson(res.bodyAsBytes()))
         } catch (e: Throwable) {
-            isRequesting.emit(false)
+            _isRequesting.emit(false)
+            _error.emit(e);
             onError(e)
         }
     }
 
     suspend fun getArray(req: HttpRequestBuilder, onSuccess: (DataArray) -> Unit, onError: (Throwable) -> Unit) {
-        isRequesting.emit(true)
+        _isRequesting.emit(true)
         try {
             val res = client.get(req)
 //            req.headers { appendIfNameAbsent(HttpHeaders.Authorization, DiscordGatewayService.testToken)
 //                appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString()) }
             Log.d("AccordionViewModel", req.build().headers.toString())
-            isRequesting.emit(false)
+            _isRequesting.emit(false)
             Log.d("AccordionViewModel", res.bodyAsText())
+            _error.emit(null)
             onSuccess(DataArray.fromJson(res.bodyAsText()))
         } catch (e: Throwable) {
-            isRequesting.emit(false)
+            _isRequesting.emit(false)
+            _error.emit(e)
             onError(e)
         }
     }
 
-    suspend fun getDMChannels() {
+    suspend fun getDMChannels(isPull: Boolean = false) {
+        this._isPulling.emit(isPull)
         getArray(
             req = HttpRequestBuilder().apply {
                 url {
@@ -95,25 +112,24 @@ class AccordionViewModel: ViewModel() {
                     this._channels.add(DMChannel.fromJson(it.getObject(index)))
                 }
                 this._channels.sortWith(compareByDescending { it.lastMessageTimeUnix() })
-            }, onError = {
-                throw it
-            }
+            }, onError = {}
         )
+        this._isPulling.emit(false)
     }
 
     suspend fun getImageBitmap(iType: String, objectId: Long, hash: String, cacheDir: File): Bitmap {
-        isRequesting.emit(true)
+        _isRequesting.emit(true)
         Log.d("AccordionViewModel", "objectId: $objectId, hash: $hash")
         Log.d("AccordionViewModel", "imagebitmap get called")
         Log.d("AccordionViewModel", "https://cdn.discordapp.com/$iType/$objectId/$hash.webp")
         if (File(cacheDir, "${objectId}_$hash.webp").exists()) {
             Log.d("AVM/Image", "found file in cache: ${File(cacheDir, "${objectId}_$hash.webp").absolutePath}")
-            isRequesting.emit(false)
-            Log.d("AndroidViewModel", "image request completed ${isRequesting.value}")
+            _isRequesting.emit(false)
+            Log.d("AndroidViewModel", "image request completed ${_isRequesting.value}")
             return BitmapFactory.decodeFile(File(cacheDir, "${objectId}_$hash.webp").absolutePath)
         }
 
-        Log.d("AndroidViewModel", "requesting image from cdn ${isRequesting.value}")
+        Log.d("AndroidViewModel", "requesting image from cdn ${_isRequesting.value}")
         val res = client.get {
             url("https://cdn.discordapp.com/$iType/$objectId/$hash.webp")
             Log.d("AVM/Image", url.buildString())
@@ -134,8 +150,8 @@ class AccordionViewModel: ViewModel() {
         File(cacheDir, "${objectId}_$hash.webp").writeBytes(imageData)
 
         Log.d("AVM/Image", "completed")
-        isRequesting.emit(false)
-        Log.d("AndroidViewModel", "image request completed ${isRequesting.value}")
+        _isRequesting.emit(false)
+        Log.d("AndroidViewModel", "image request completed ${_isRequesting.value}")
         return BitmapFactory.decodeByteArray(imageData, 0, imageData.size)
     }
 
@@ -183,5 +199,21 @@ class AccordionViewModel: ViewModel() {
             4L -> R.drawable.default_avatar_4
             else -> R.drawable.default_avatar_5
         }
+    }
+
+    suspend fun loadDirectMessages(channelId: Long) {
+        getArray(req = HttpRequestBuilder().apply {
+            url("channels/$channelId/messages")
+        }, onSuccess =  {
+            this._messages.clear()
+            it.forEachIndexed { i, sm ->
+                val m = it.getObject(i)
+                this._messages.add(
+                    TempMessage.fromJson(m)
+                )
+            }
+        }, onError = {
+            throw it
+        })
     }
 }
