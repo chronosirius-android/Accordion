@@ -88,13 +88,13 @@ class MainActivity : ComponentActivity() {
                 val currentDestination = currentBackStack?.destination?.route
                 Log.d("MainActivity", "Current destination: $currentDestination")
 
-                val isNotConnected = currentBackStack?.sharedViewModel<AccordionViewModel>(navController)?.isRequesting?.collectAsState()
+                val isNotConnected = LoadingStateManager.isLoading.collectAsState()
                 val netError = currentBackStack?.sharedViewModel<AccordionViewModel>(navController)?.error?.collectAsState()
                 val isPulling = currentBackStack?.sharedViewModel<AccordionViewModel>(navController)?.isPulling?.collectAsState()
-                Log.d("MainActivity", "isNotConnected: ${isNotConnected?.value}")
+                Log.d("MainActivity", "isNotConnected: ${isNotConnected.value}")
                 Scaffold(
                     topBar = @Composable {
-                        if (isNotConnected?.value == true && isPulling?.value == false) {
+                        if (isNotConnected.value == true && isPulling?.value == false) {
                             Log.d("MainActivity", "Showing progress bar")
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(20.dp))
@@ -176,9 +176,13 @@ class MainActivity : ComponentActivity() {
                                     selected = currentBackStack?.destination?.parent?.route == "DMS",
                                     onClick = {
                                         Log.d("MainActivity", "Navigating to DMS")
-                                        navController.navigate("DMS") {
+                                        navController.navigate("conversation_list") {
                                             launchSingleTop = true
                                             restoreState = true
+                                            popUpTo("DMS") {
+                                                inclusive = true
+                                                saveState = true
+                                            }// Clear the back stack to avoid duplicates
                                         }
                                     }
                                 )
@@ -214,6 +218,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     MainNavPoint(navController, this as Context, modifier=Modifier.padding(it).fillMaxSize())
+                    val a = navController.visibleEntries.collectAsState()
+                    Log.d("MainActivity", "Visible entries: ${a.value}")
                 }
             }
         }

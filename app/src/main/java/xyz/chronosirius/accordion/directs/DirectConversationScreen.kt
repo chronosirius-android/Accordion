@@ -1,5 +1,6 @@
 package xyz.chronosirius.accordion.directs
 
+import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -58,12 +60,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.navigation.NavController
+import kotlinx.coroutines.coroutineScope
 import xyz.chronosirius.accordion.R
 import xyz.chronosirius.accordion.viewmodels.AccordionViewModel
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ConversationScreen(navController: NavController, channelId: Long, vm: AccordionViewModel) {
+fun ConversationScreen(navController: NavController, channelId: Long, vm: AccordionViewModel, ctx: Context) {
     LaunchedEffect(Unit) {
         // This will fetch the direct messages from the server
         // and update the UI with the messages list
@@ -160,15 +163,17 @@ fun ConversationScreen(navController: NavController, channelId: Long, vm: Accord
             stickyHeader {
                 Spacer(modifier = Modifier.height(24.dp))
             }
+
             items(vm.messages.size) { index ->
                 val message = vm.messages[index]
-                Row(
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .absolutePadding(10.dp, 10.dp, 10.dp, 0.dp),
-                ) {
-                    Text("${message.author.username}: ${message.content}", fontSize = 4.em)
-                }
+//                Row(
+//                    modifier = Modifier
+//                        .padding(10.dp)
+//                        .absolutePadding(10.dp, 10.dp, 10.dp, 0.dp),
+//                ) {
+//                    Text("${message.author.username}: ${message.content}", fontSize = 4.em)
+//                }
+                message.UI(vm, ctx)
             }
         }
     }

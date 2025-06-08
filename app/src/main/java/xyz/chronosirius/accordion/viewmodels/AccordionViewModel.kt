@@ -24,13 +24,13 @@ import io.ktor.util.appendIfNameAbsent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import xyz.chronosirius.accordion.DiscordApiClient
 import xyz.chronosirius.accordion.DiscordGatewayService
 import xyz.chronosirius.accordion.R
 import xyz.chronosirius.accordion.data.DataArray
 import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.global_models.DMChannel
 import xyz.chronosirius.accordion.global_models.Message
-import xyz.chronosirius.accordion.global_models.TempMessage
 import java.io.File
 
 class AccordionViewModel: ViewModel() {
@@ -52,55 +52,14 @@ class AccordionViewModel: ViewModel() {
     private val _channels = mutableStateListOf<DMChannel>()
     val channels: List<DMChannel> = _channels
     
-    private val _messages = mutableStateListOf<TempMessage>()
-    val messages: List<TempMessage> = _messages
+    private val _messages = mutableStateListOf<Message>()
+    val messages: List<Message> = _messages
 
-    private val client = HttpClient(OkHttp) {
-        defaultRequest {
-            headers.appendIfNameAbsent(HttpHeaders.Authorization, DiscordGatewayService.testToken)
-            headers.appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            headers.appendIfNameAbsent(HttpHeaders.UserAgent, "Android/Accordion, Native Jetpack-Compose Material3, Kotlin2")
-            Log.d("AccordionViewModel", DiscordGatewayService.testToken)
-            Log.d("AccordionViewModel", headers.build().toString())
-            url("https://discord.com/api/v9")
-        }
-    }
-
-    suspend fun getObject(req: HttpRequestBuilder, onSuccess: (DataObject) -> Unit, onError: (Throwable) -> Unit) {
-        _isRequesting.emit(true)
-        try {
-            val res = client.get(req)
-            _isRequesting.emit(false)
-            _error.emit(null)
-            onSuccess(DataObject.fromJson(res.bodyAsBytes()))
-        } catch (e: Throwable) {
-            _isRequesting.emit(false)
-            _error.emit(e);
-            onError(e)
-        }
-    }
-
-    suspend fun getArray(req: HttpRequestBuilder, onSuccess: (DataArray) -> Unit, onError: (Throwable) -> Unit) {
-        _isRequesting.emit(true)
-        try {
-            val res = client.get(req)
-//            req.headers { appendIfNameAbsent(HttpHeaders.Authorization, DiscordGatewayService.testToken)
-//                appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString()) }
-            Log.d("AccordionViewModel", req.build().headers.toString())
-            _isRequesting.emit(false)
-            Log.d("AccordionViewModel", res.bodyAsText())
-            _error.emit(null)
-            onSuccess(DataArray.fromJson(res.bodyAsText()))
-        } catch (e: Throwable) {
-            _isRequesting.emit(false)
-            _error.emit(e)
-            onError(e)
-        }
-    }
+    private val client = DiscordApiClient()
 
     suspend fun getDMChannels(isPull: Boolean = false) {
         this._isPulling.emit(isPull)
-        getArray(
+        client.getArray(
             req = HttpRequestBuilder().apply {
                 url {
                     appendPathSegments("users/@me/channels")
@@ -117,43 +76,7 @@ class AccordionViewModel: ViewModel() {
         this._isPulling.emit(false)
     }
 
-    suspend fun getImageBitmap(iType: String, objectId: Long, hash: String, cacheDir: File): Bitmap {
-        _isRequesting.emit(true)
-        Log.d("AccordionViewModel", "objectId: $objectId, hash: $hash")
-        Log.d("AccordionViewModel", "imagebitmap get called")
-        Log.d("AccordionViewModel", "https://cdn.discordapp.com/$iType/$objectId/$hash.webp")
-        if (File(cacheDir, "${objectId}_$hash.webp").exists()) {
-            Log.d("AVM/Image", "found file in cache: ${File(cacheDir, "${objectId}_$hash.webp").absolutePath}")
-            _isRequesting.emit(false)
-            Log.d("AndroidViewModel", "image request completed ${_isRequesting.value}")
-            return BitmapFactory.decodeFile(File(cacheDir, "${objectId}_$hash.webp").absolutePath)
-        }
 
-        Log.d("AndroidViewModel", "requesting image from cdn ${_isRequesting.value}")
-        val res = client.get {
-            url("https://cdn.discordapp.com/$iType/$objectId/$hash.webp")
-            Log.d("AVM/Image", url.buildString())
-            headers {
-                append(HttpHeaders.Host, "cdn.discordapp.com")
-                //append(HttpHeaders.ContentType, ContentType.Image.PNG.toString())
-            }
-        }
-
-
-        delay(2000)
-
-        Log.d("AccordionViewModel/Image", "${res.status.value} ${res.request.url} ${res.bodyAsText()}")
-
-        val imageData = res.bodyAsBytes()
-        Log.d("AccordionViewModel/Image", "${res.request.url} imd size: ${imageData.size}")
-        Log.d("AccordionViewModel/Image", "${res.request.url} imd: $imageData")
-        File(cacheDir, "${objectId}_$hash.webp").writeBytes(imageData)
-
-        Log.d("AVM/Image", "completed")
-        _isRequesting.emit(false)
-        Log.d("AndroidViewModel", "image request completed ${_isRequesting.value}")
-        return BitmapFactory.decodeByteArray(imageData, 0, imageData.size)
-    }
 
 //    suspend fun getAvatarBitmap(objectId: Long, hash: String): Bitmap {
 //        Log.d("AccordionViewModel", "objectId: $objectId, hash: $hash")
@@ -182,7 +105,7 @@ class AccordionViewModel: ViewModel() {
         // This will return the avatar for the user
         // based on their user ID and avatar hash
         // This is a placeholder implementation
-        return getImageBitmap("avatars", userId, hash, cacheDir)
+        return client.getImageBitmap("avatars", userId, hash, cacheDir)
     }
 
     @DrawableRes
@@ -202,14 +125,14 @@ class AccordionViewModel: ViewModel() {
     }
 
     suspend fun loadDirectMessages(channelId: Long) {
-        getArray(req = HttpRequestBuilder().apply {
+        client.getArray(req = HttpRequestBuilder().apply {
             url("channels/$channelId/messages")
         }, onSuccess =  {
             this._messages.clear()
             it.forEachIndexed { i, sm ->
                 val m = it.getObject(i)
                 this._messages.add(
-                    TempMessage.fromJson(m)
+                    Message.fromJson(m)
                 )
             }
         }, onError = {

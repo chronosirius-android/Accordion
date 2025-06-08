@@ -100,7 +100,7 @@ class DMChannel(
             try {
                 if (icon != null) {
                     // Load the image from the URL
-                    image = vm.getImageBitmap("channel-icons", id, icon, ctx.cacheDir)
+                    //image = vm.getImageBitmap("channel-icons", id, icon, ctx.cacheDir)
                 } else {
                     // Load the default icon
                     if (recipients.isNotEmpty()) {

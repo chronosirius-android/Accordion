@@ -45,7 +45,8 @@ fun MainNavPoint(navController: NavHostController, context: Context, modifier: M
                     ConversationScreen(
                         navController,
                         channelId,
-                        backStackEntry.sharedViewModel(navController)
+                        backStackEntry.sharedViewModel(navController),
+                        context
                     )
                 }
             }
