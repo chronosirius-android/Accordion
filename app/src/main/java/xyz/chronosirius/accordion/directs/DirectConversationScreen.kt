@@ -1,13 +1,11 @@
 package xyz.chronosirius.accordion.directs
 
-import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,39 +14,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -56,32 +45,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.navigation.NavController
-import kotlinx.coroutines.coroutineScope
 import xyz.chronosirius.accordion.R
-import xyz.chronosirius.accordion.viewmodels.AccordionViewModel
+import xyz.chronosirius.accordion.viewmodels.DirectMessageConversationViewModel
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ConversationScreen(navController: NavController, channelId: Long, vm: AccordionViewModel, ctx: Context) {
-    LaunchedEffect(Unit) {
-        // This will fetch the direct messages from the server
-        // and update the UI with the messages list
-        // will load a conversation screen fragment with the messages once loaded
-        // vm.get { url("https://discord.com/api/v9/users/@me/channels") }
-        //vm.getMessages(channel)
-        vm.loadDirectMessages(channelId)
-    }
-    val channel = vm.channels.find {
-        it.id.toLong() == channelId
-    }!!
+fun ConversationScreen(
+    navController: NavController,
+    vm: DirectMessageConversationViewModel
+) {
     var message by remember {
         mutableStateOf("")
     }
     val interactionSource = remember { MutableInteractionSource() }
+
+    val uiState = vm.uiState.collectAsState()
+        .value
+
+    val channel = uiState.channel
+    val messages = uiState.messages
+
     Scaffold( topBar = @Composable {
         Row(modifier = Modifier.padding(20.dp)) {
             Text(channel.name(), fontWeight = FontWeight.Bold)
@@ -164,8 +149,8 @@ fun ConversationScreen(navController: NavController, channelId: Long, vm: Accord
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            items(vm.messages.size) { index ->
-                val message = vm.messages[index]
+            items(messages.size) { index ->
+                val message = messages[index]
 //                Row(
 //                    modifier = Modifier
 //                        .padding(10.dp)
@@ -173,7 +158,7 @@ fun ConversationScreen(navController: NavController, channelId: Long, vm: Accord
 //                ) {
 //                    Text("${message.author.username}: ${message.content}", fontSize = 4.em)
 //                }
-                message.UI(vm, ctx)
+                message.UI()
             }
         }
     }

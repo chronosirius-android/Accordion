@@ -50,16 +50,26 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.flow.asStateFlow
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
+import coil3.util.DebugLogger
+import coil3.util.Logger
+import dagger.hilt.android.AndroidEntryPoint
+import okio.Path.Companion.toOkioPath
 import xyz.chronosirius.accordion.ui.theme.AccordionTheme
 import xyz.chronosirius.accordion.viewmodels.AccordionViewModel
+
 
 // UI components file
 // https://developer.android.com/develop/ui/compose/documentation
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     //val requestViewModel by viewModels<RequestViewModel>()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,6 +82,27 @@ class MainActivity : ComponentActivity() {
                 Log.d("MainActivity", "Service already running")
                 startService = false
             }
+        }
+
+        SingletonImageLoader.setSafe {
+            ImageLoader.Builder(this)
+                .memoryCache {
+                    MemoryCache.Builder()
+                        .maxSizePercent(this, 0.25)
+                        .build()
+                }
+                .diskCache {
+                    DiskCache.Builder()
+                        .directory(this.cacheDir.resolve("image_cache").toOkioPath())
+                        .maxSizePercent(0.02)
+                        .build()
+                }
+                .logger(
+                    DebugLogger(
+                        minLevel = Logger.Level.Info
+                    )
+                )
+                .build()
         }
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

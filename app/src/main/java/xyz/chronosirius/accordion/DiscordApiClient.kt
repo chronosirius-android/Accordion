@@ -34,35 +34,33 @@ class DiscordApiClient {
         }
     }
 
-    suspend fun getObject(req: HttpRequestBuilder, onSuccess: (DataObject) -> Unit, onError: (Throwable) -> Unit) {
+    suspend fun getObject(req: HttpRequestBuilder): DataObject {
         LoadingStateManager.incrementActiveRequests()
-        try {
-            val res = client.get(req)
-            LoadingStateManager.decrementActiveRequests()
-            onSuccess(DataObject.fromJson(res.bodyAsBytes()))
-        } catch (e: Throwable) {
-            LoadingStateManager.decrementActiveRequests()
-            onError(e)
-        }
+        val res = client.get(req)
+        LoadingStateManager.decrementActiveRequests()
+        return DataObject.fromJson(res.bodyAsBytes())
+    }
+
+    suspend fun getObject(req: HttpRequestBuilder, onSuccess: (DataObject) -> Unit, onError: (Throwable) -> Unit) {
+        Log.d("AccordionViewModel", "temp legacy getObject called")
+    }
+
+    suspend fun getArray(req: HttpRequestBuilder): DataArray {
+        LoadingStateManager.incrementActiveRequests()
+        val res = client.get(req)
+        LoadingStateManager.decrementActiveRequests()
+        return DataArray.fromJson(res.bodyAsText())
     }
 
     suspend fun getArray(req: HttpRequestBuilder, onSuccess: (DataArray) -> Unit, onError: (Throwable) -> Unit) {
-        LoadingStateManager.incrementActiveRequests()
-        try {
-            val res = client.get(req)
-//            req.headers { appendIfNameAbsent(HttpHeaders.Authorization, DiscordGatewayService.testToken)
-//                appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString()) }
-            Log.d("AccordionViewModel", req.build().headers.toString())
-            LoadingStateManager.decrementActiveRequests()
-            Log.d("AccordionViewModel", res.bodyAsText())
-            onSuccess(DataArray.fromJson(res.bodyAsText()))
-        } catch (e: Throwable) {
-            LoadingStateManager.decrementActiveRequests()
-            onError(e)
-        }
+        Log.d("AccordionViewModel", "temp legacy getArray called")
     }
 
     suspend fun getImageBitmap(iType: String, objectId: Long, hash: String, cacheDir: File): Bitmap {
+        /*
+        This function fetches an image from the Discord CDN and returns it as a Bitmap.
+        LEGACY FUNCTION, DO NOT USE IN NEW CODE. (temporarily exists for compatibility with un-migrated code)
+         */
         LoadingStateManager.incrementActiveRequests()
         Log.d("AccordionViewModel", "objectId: $objectId, hash: $hash")
         Log.d("AccordionViewModel", "imagebitmap get called")

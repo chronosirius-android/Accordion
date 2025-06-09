@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
 }
 
 
@@ -85,4 +87,10 @@ dependencies {
     implementation(libs.ktor.client.contentNegotiation)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.coil3.compose)
+    implementation(libs.coil3.net.okhttp)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    ksp(libs.android.hilt.compiler)
+    implementation(libs.android.hilt.navigation.compose)
 }

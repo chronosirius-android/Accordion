@@ -12,14 +12,15 @@ object LoadingStateManager {
 
 
     fun incrementActiveRequests() {
-        if (_activeRequests.incrementAndGet() == 1) {
+        if (_activeRequests.incrementAndGet() >= 1) {
             _isLoading.value = true // First active request, show loading
         }
     }
 
     fun decrementActiveRequests() {
-        if (_activeRequests.decrementAndGet() == 0) {
+        if (_activeRequests.decrementAndGet() <= 0) {
             _isLoading.value = false // Last active request, hide loading
+            _activeRequests.compareAndSet(0,0) // Reset to zero if it goes negative
         }
     }
 }

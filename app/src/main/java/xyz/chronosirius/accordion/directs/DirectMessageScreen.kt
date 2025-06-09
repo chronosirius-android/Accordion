@@ -1,6 +1,5 @@
 package xyz.chronosirius.accordion.directs
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -19,13 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,34 +28,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import xyz.chronosirius.accordion.R
-import xyz.chronosirius.accordion.viewmodels.AccordionViewModel
+import xyz.chronosirius.accordion.viewmodels.DirectMessageListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DirectMessageScreen(navController: NavController, vm: AccordionViewModel, ctx: Context) {
-    /*val vm = viewModel<DirectMessageViewModel>()
-    val isUnloaded by vm.isUnloaded.collectAsStateWithLifecycle()
-    if (isUnloaded) {
-        LaunchedEffect(true) {
-            // This will fetch the direct messages from the server
-            // and update the UI with the messages list
-            // will load a conversation screen fragment with the messages once loaded
-            // vm.getArray { url("https://discord.com/api/v9/users/@me/channels") }
-            vm.getChannels()
-        }
-    }*/
+fun DirectMessageScreen(navController: NavController, vm: DirectMessageListViewModel = hiltViewModel()) {
 
-    var us by remember { mutableIntStateOf(1) }
+    val channels = vm.uiState.collectAsState().value.channels
 
-    LaunchedEffect(us) {
-        vm.getDMChannels(us != 1)
-    }
     PullToRefreshBox(
-        isRefreshing = vm.isPulling.collectAsState().value,
+        isRefreshing = channels.isEmpty(),
         onRefresh = {
-            us += 1
+            vm.getDMChannels()
         }
     ) {
         Column (
@@ -81,8 +61,8 @@ fun DirectMessageScreen(navController: NavController, vm: AccordionViewModel, ct
             Spacer(Modifier.height(10.dp))
 
             LazyColumn {
-                items(vm.channels.size) { index ->
-                    val channel = vm.channels[index]
+                items(channels.size) { index ->
+                    val channel = channels[index]
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -91,12 +71,12 @@ fun DirectMessageScreen(navController: NavController, vm: AccordionViewModel, ct
                             .clickable {
                                 navController.navigate("channels/${channel.id}") {
                                     launchSingleTop = true
+
                                 }
                             },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         channel.Icon(
-                            vm, ctx,
                             modifier = Modifier
                                 .size(50.dp)
                                 .clip(CircleShape)

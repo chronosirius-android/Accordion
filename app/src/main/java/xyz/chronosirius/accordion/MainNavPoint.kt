@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +15,7 @@ import androidx.navigation.compose.navigation
 import xyz.chronosirius.accordion.directs.ConversationScreen
 import xyz.chronosirius.accordion.directs.DirectMessageScreen
 import xyz.chronosirius.accordion.servers.ServerScreen
+import xyz.chronosirius.accordion.viewmodels.DirectMessageConversationViewModel
 
 @Composable
 fun MainNavPoint(navController: NavHostController, context: Context, modifier: Modifier = Modifier) {
@@ -33,7 +35,7 @@ fun MainNavPoint(navController: NavHostController, context: Context, modifier: M
             }
         ) {
             composable("conversation_list") {
-                DirectMessageScreen(navController, it.sharedViewModel(navController), context)
+                DirectMessageScreen(navController)
             }
 
             composable("channels/{channelId}",
@@ -41,12 +43,11 @@ fun MainNavPoint(navController: NavHostController, context: Context, modifier: M
             )
             { backStackEntry ->
                 val channelId = backStackEntry.arguments?.getString("channelId")?.toLong()
+                val vm: DirectMessageConversationViewModel = hiltViewModel()
                 if (channelId != null) {
                     ConversationScreen(
                         navController,
-                        channelId,
-                        backStackEntry.sharedViewModel(navController),
-                        context
+                        vm
                     )
                 }
             }
