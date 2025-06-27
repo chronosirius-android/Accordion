@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.accompanist.permissions)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.androidx.core)
+    implementation(libs.androidx.core.google.shortcuts)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

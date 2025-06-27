@@ -71,7 +71,7 @@ class User(
                 da.getString("avatar", null),
                 da.getObject("avatar_decoration_data", null),
                 da.getString("discriminator"),
-                da.getInt("public_flags"),
+                da.getInt("public_flags", 0),
                 da.getBoolean("bot")
             )
         }

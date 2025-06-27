@@ -16,4 +16,10 @@ object Repositories {
     fun provideDirectMessagesRepository(apiClient: DiscordApiClient): DirectMessagesRepository {
         return DirectMessagesRepository(apiClient)
     }
+
+    @Provides
+    @Singleton
+    fun provideGatewayRepository(): GatewayRepository {
+        return GatewayRepository()
+    }
 }

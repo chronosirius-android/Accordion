@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -246,7 +247,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize().imePadding()
                 ) {
                     MainNavPoint(navController, this as Context, modifier=Modifier.padding(it).fillMaxSize())
                     val a = navController.visibleEntries.collectAsState()

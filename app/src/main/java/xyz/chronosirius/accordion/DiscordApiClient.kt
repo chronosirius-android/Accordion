@@ -9,7 +9,9 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.client.request.request
 import io.ktor.client.request.url
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.request
@@ -41,19 +43,11 @@ class DiscordApiClient {
         return DataObject.fromJson(res.bodyAsBytes())
     }
 
-    suspend fun getObject(req: HttpRequestBuilder, onSuccess: (DataObject) -> Unit, onError: (Throwable) -> Unit) {
-        Log.d("AccordionViewModel", "temp legacy getObject called")
-    }
-
     suspend fun getArray(req: HttpRequestBuilder): DataArray {
         LoadingStateManager.incrementActiveRequests()
         val res = client.get(req)
         LoadingStateManager.decrementActiveRequests()
         return DataArray.fromJson(res.bodyAsText())
-    }
-
-    suspend fun getArray(req: HttpRequestBuilder, onSuccess: (DataArray) -> Unit, onError: (Throwable) -> Unit) {
-        Log.d("AccordionViewModel", "temp legacy getArray called")
     }
 
     suspend fun getImageBitmap(iType: String, objectId: Long, hash: String, cacheDir: File): Bitmap {
@@ -93,5 +87,13 @@ class DiscordApiClient {
         Log.d("AVM/Image", "completed")
         LoadingStateManager.decrementActiveRequests()
         return BitmapFactory.decodeByteArray(imageData, 0, imageData.size)
+    }
+
+    suspend fun post(req: HttpRequestBuilder): HttpResponse { // temporary legacy function, do not use in new code
+        LoadingStateManager.incrementActiveRequests()
+        val res = client.request(req)
+        LoadingStateManager.decrementActiveRequests()
+        Log.d("AccordionViewModel", "post response: ${res.status.value} ${res.bodyAsText()}")
+        return res
     }
 }

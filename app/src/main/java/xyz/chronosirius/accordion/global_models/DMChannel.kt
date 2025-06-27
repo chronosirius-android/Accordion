@@ -6,13 +6,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import coil3.compose.AsyncImage
 import kotlinx.datetime.DateTimePeriod
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.periodUntil
 import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.getDefaultAvatar
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.time.toDuration
 
 class DMChannel(
@@ -51,7 +52,7 @@ class DMChannel(
 
     fun name(): String {
         return try {
-            name ?: recipients[0].username
+            name ?: recipients.joinToString(", ") { it.username }
         } catch (_: Exception) {
             id.toString()
         }
@@ -61,6 +62,7 @@ class DMChannel(
         return (lastMessageId.toLong() shr 22) + 1420070400000
     }
 
+    @OptIn(ExperimentalTime::class)
     fun timeSinceLastMessage(): DateTimePeriod {
         return (System.currentTimeMillis() - lastMessageTimeUnix()).toDuration(DurationUnit.MILLISECONDS)
             .toDateTimePeriod(Instant.fromEpochMilliseconds(lastMessageTimeUnix()), TimeZone.currentSystemDefault())
@@ -139,6 +141,7 @@ class DMChannel(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 fun Duration.toDateTimePeriod(instant: Instant, timeZone: TimeZone): DateTimePeriod {
     return instant.periodUntil(instant + this, timeZone)
 }

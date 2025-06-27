@@ -26,7 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import xyz.chronosirius.accordion.data.DataObject
-import xyz.chronosirius.accordion.md.annotatedWith
 import xyz.chronosirius.accordion.md.inlineTextContent
 import xyz.chronosirius.accordion.md.rememberInlineContentPatternAnnotation
 import xyz.chronosirius.accordion.md.rememberLinkPatternAnnotation
@@ -71,11 +70,15 @@ class Message(
 ): Snowflaked() {
     companion object {
         fun fromJson(data: DataObject): Message {
+            var c = data.getString("content", "")
+            if (c.isEmpty() && !data.getArray("attachments").isEmpty) {
+                c = "(attachment)"
+            }
             return Message(
                 id = data.getLong("id"),
                 channelId = data.getString("channel_id"),
                 author = User.fromJson(data.getObject("author")),
-                content = data.getString("content"),
+                content = c,
                 timestamp = data.getString("timestamp"),
                 editedTimestamp = data.getString("edited_timestamp", null),
                 tts = false,
@@ -88,7 +91,7 @@ class Message(
                     }
                 },
                 mentionRoles = data.getArray("mention_roles").let { roles ->
-                    if (roles.isEmpty()) {
+                    if (roles.isEmpty) {
                         emptyList()
                     } else {
                         roles.map { it.toString() }
@@ -96,7 +99,7 @@ class Message(
                 },
                 mentionChannels = try {
                     data.getArray("mention_channels").let { channels ->
-                    if (channels.isEmpty()) {
+                    if (channels.isEmpty) {
                         emptyList()
                     } else {
                         channels.map { it.toString() }
@@ -152,39 +155,57 @@ class Message(
         }
     }
     @Composable
-    fun UI() {
+    fun UI(lastMessage: Message? = null) {
         // This will be used to display the message in the UI
         // It will be a Composable function that will take the message data and display it
         // in a nice way
+        val sameAuthor = lastMessage != null &&
+                lastMessage.author.id == this@Message.author.id
+        val showAuthor = lastMessage == null ||
+                !sameAuthor ||
+                (lastMessage.getTimestamp() + 5 * 60 * 1000) < this.getTimestamp()
         Column(
             modifier = Modifier
-                .padding(10.dp)
+                .padding(
+                    start=10.dp,
+                    end=10.dp,
+                    top=if (showAuthor) 20.dp else 0.dp,
+                    bottom=0.dp
+                )
+//                .padding(10.dp)
                 .fillMaxWidth()
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                //Image(author)
-                author.Avatar(modifier = Modifier
-                    .clip(shape = CircleShape)
-                    .size(30.dp)
-                )
-                Text(
-                    text = author.username,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(5.dp)
-                )
+            Log.d("a", "last: ${lastMessage?.author?.id}, this: ${this@Message.author.id}")
+
+            if (showAuthor) {
+                // Show timestamp if the last message was sent more than 5 minutes ago
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    //Image(author)
+                    author.Avatar(
+                        modifier = Modifier
+                            .clip(shape = CircleShape)
+                            .size(30.dp)
+                    )
+                    Text(
+                        text = author.username,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(5.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(5.dp))
-            Content()
+            Content(modifier = Modifier
+                .padding(start=10.dp, end=10.dp, top=if (!showAuthor) 5.dp else 0.dp, bottom=5.dp)
+            )
         }
     }
 
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
-    fun Content() {
+    fun Content(modifier: Modifier = Modifier) {
         val p = "<@[0-9]+>"//.toRegex()
-        var cont = this.content
         //val s = p.findAll(cont)
 
 //        FlowRow(horizontalArrangement = Arrangement.spacedBy(0.dp), maxLines = 1) {
@@ -317,7 +338,7 @@ class Message(
         Text(
             a.annotatedString,
             inlineContent = a.inlineContentMap,
-            modifier = Modifier.padding(5.dp).padding(start=10.dp,top=5.dp),
+            modifier = modifier,
         )
 
     }
