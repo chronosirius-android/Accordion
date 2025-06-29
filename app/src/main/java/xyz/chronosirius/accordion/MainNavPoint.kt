@@ -43,7 +43,7 @@ fun MainNavPoint(navController: NavHostController, context: Context, modifier: M
             }
         ) {
             composable("conversation_list") {
-                DirectMessageScreen(navController, viewModel(
+                DirectMessageScreen(navController, hiltViewModel(
                     activityViewModelStoreOwner
                 ))
             }
@@ -66,7 +66,12 @@ fun MainNavPoint(navController: NavHostController, context: Context, modifier: M
             enterTransition = { EnterTransition.None }
         ) {
             composable("server_list") {
-                ServerScreen(navController)
+                ServerScreen(
+                    navController,
+                    hiltViewModel(
+                        activityViewModelStoreOwner
+                    )
+                )
             }
 
             navigation(
@@ -78,7 +83,8 @@ fun MainNavPoint(navController: NavHostController, context: Context, modifier: M
                     enterTransition = { EnterTransition.None },
                     exitTransition = { ExitTransition.None }
                 ) {
-                    ServerScreen(navController)
+                    Text("unbuilt UI")
+                    // TODO: Implement server channel list UI
                 }
                 composable("channels/{channelId}")
                 { backStackEntry ->

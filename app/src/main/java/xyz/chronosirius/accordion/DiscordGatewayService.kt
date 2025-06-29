@@ -5,11 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.IBinder
 import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.lifecycle.LifecycleService
@@ -40,6 +37,7 @@ enum class ErrorType(val t: Int) {
     WEBSOCKET_ERROR(1),
     OTHER_ERROR(2)
 }
+
 
 class DiscordGatewayService : LifecycleService() {
 
@@ -105,7 +103,7 @@ class DiscordGatewayService : LifecycleService() {
                         if (hello.getInt("op") != 10) {
                             Log.e("DiscordGatewayService", "Expected OP 10, got ${hello.getInt("op")}")
                             isGatewayConnected.value = false
-                            exitProcess(1)
+                            throw Exception("Expected OP 10, got ${hello.getInt("op")}")
                         }
                         val heartbeatInterval = hello.getObject("d").getInt("heartbeat_interval")
                         // HELLO PROCESSING COMPLETE
@@ -164,7 +162,7 @@ class DiscordGatewayService : LifecycleService() {
 
                         isGatewayConnected.value = true
                         val heartBeatJob = launch(Dispatchers.IO) { // Heartbeat code (must disconnect from incoming frames or will not get sent)
-                            while (isGatewayConnected.value == true) {
+                            while (isGatewayConnected.value) {
                                 delay(heartbeatInterval.toLong())
                                 try {
                                     sendObject(

@@ -16,7 +16,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlin.time.toDuration
 
-class DMChannel(
+data class DMChannel(
     override val id: Long,
     val type: Int,
     val lastMessageId: String,
@@ -37,7 +37,7 @@ class DMChannel(
                 da.getInt("type"),
                 da.getString("last_message_id"),
                 da.getInt("flags"),
-                da.getObjectArray("recipients").map { User.Companion.fromJson(it) },
+                da.getObjectArray("recipients").map { User.fromJson(it) },
                 da.getString("name", null),
                 da.getString("icon", null)
             )
@@ -65,6 +65,12 @@ class DMChannel(
     @OptIn(ExperimentalTime::class)
     fun timeSinceLastMessage(): DateTimePeriod {
         return (System.currentTimeMillis() - lastMessageTimeUnix()).toDuration(DurationUnit.MILLISECONDS)
+            .toDateTimePeriod(Instant.fromEpochMilliseconds(lastMessageTimeUnix()), TimeZone.currentSystemDefault())
+    }
+
+    @OptIn(ExperimentalTime::class)
+    fun timeFromLastMessage(time: Long): DateTimePeriod {
+        return (time - lastMessageTimeUnix()).toDuration(DurationUnit.MILLISECONDS)
             .toDateTimePeriod(Instant.fromEpochMilliseconds(lastMessageTimeUnix()), TimeZone.currentSystemDefault())
     }
 

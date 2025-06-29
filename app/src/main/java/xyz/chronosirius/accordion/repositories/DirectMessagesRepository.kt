@@ -15,13 +15,11 @@ class DirectMessagesRepository(
     private val client: DiscordApiClient,
 ) {
     suspend fun getDirectMessages(): List<DMChannel> {
-        val rawDA = client.getArray(
-            req = HttpRequestBuilder().apply {
-                url {
-                    appendPathSegments("users/@me/channels")
-                }
+        val rawDA = client.getArray {
+            url {
+                appendPathSegments("users/@me/channels")
             }
-        )
+        }
         val channels = mutableListOf<DMChannel>()
         rawDA.forEachIndexed { index, _ ->
             channels.add(DMChannel.fromJson(rawDA.getObject(index)))
@@ -30,15 +28,13 @@ class DirectMessagesRepository(
     }
 
     suspend fun getMessagesForChannel(channelId: Long): List<Message> {
-        val rawDA = client.getArray(
-            req = HttpRequestBuilder().apply {
-                url {
-                    appendPathSegments("channels", channelId.toString(), "messages")
-                }
+        val rawDA = client.getArray {
+            url {
+                appendPathSegments("channels", channelId.toString(), "messages")
             }
-        )
+        }
         val messages = mutableListOf<Message>()
-        rawDA.forEachIndexed { i, sm ->
+        rawDA.forEachIndexed { i, _ ->
             val m = rawDA.getObject(i)
             messages.add(
                 Message.fromJson(m)
@@ -48,13 +44,11 @@ class DirectMessagesRepository(
     }
 
     suspend fun getChannelById(id: Long): DMChannel {
-        val rawDO = client.getObject(
-            req = HttpRequestBuilder().apply {
-                url {
-                    appendPathSegments("channels", id.toString())
-                }
+        val rawDO = client.getObject {
+            url {
+                appendPathSegments("channels", id.toString())
             }
-        )
+        }
         return DMChannel.fromJson(rawDO)
     }
 

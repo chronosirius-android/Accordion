@@ -16,6 +16,8 @@
 
 package xyz.chronosirius.accordion.data;
 
+import androidx.annotation.NonNull;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -905,5 +907,43 @@ public class DataObject implements SerializableData
     public int hashCode()
     {
         return toMap().hashCode();
+    }
+
+    /**
+     * Attempts to get a long value for the specified key.
+     *
+     * @param string
+     *        The key to check for a value
+     *
+     * @throws xyz.chronosirius.accordion.data.ParsingException
+     *         If the value is missing, null, or of the wrong type
+     *
+     * @return The long value for the key, or null if it cannot be parsed
+     */
+    public @Nullable Long getLongOrNull(@NonNull String string) {
+        try {
+            return getLong(string);
+        } catch (ParsingException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Attempts to get an int value for the specified key.
+     *
+     * @param string
+     *        The key to check for a value
+     *
+     * @throws xyz.chronosirius.accordion.data.ParsingException
+     *         If the value is missing, null, or of the wrong type
+     *
+     * @return The int value for the key, or null if it cannot be parsed
+     */
+    public @Nullable Integer getIntOrNull(@NonNull String string) {
+        try {
+            return getInt(string);
+        } catch (ParsingException e) {
+            return null;
+        }
     }
 }

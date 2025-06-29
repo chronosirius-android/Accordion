@@ -29,21 +29,22 @@ class DiscordApiClient {
         defaultRequest {
             headers.appendIfNameAbsent(HttpHeaders.Authorization, DiscordGatewayService.testToken)
             headers.appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            headers.appendIfNameAbsent(HttpHeaders.UserAgent, "Android/Accordion, Native Jetpack-Compose Material3, Kotlin2")
+            //headers.appendIfNameAbsent(HttpHeaders.UserAgent, "Android/Accordion, Native Jetpack-Compose Material3, Kotlin2") // seems like discord doesn't like this UA (I got a warning), so until this becomes bigger, I will switch this to the discord chrome client UA
+            headers.appendIfNameAbsent(HttpHeaders.UserAgent, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36")
             Log.d("AccordionViewModel", DiscordGatewayService.testToken)
             Log.d("AccordionViewModel", headers.build().toString())
             url("https://discord.com/api/v9")
         }
     }
 
-    suspend fun getObject(req: HttpRequestBuilder): DataObject {
+    suspend fun getObject(req: HttpRequestBuilder.() -> Unit): DataObject {
         LoadingStateManager.incrementActiveRequests()
         val res = client.get(req)
         LoadingStateManager.decrementActiveRequests()
         return DataObject.fromJson(res.bodyAsBytes())
     }
 
-    suspend fun getArray(req: HttpRequestBuilder): DataArray {
+    suspend fun getArray(req: HttpRequestBuilder.() -> Unit): DataArray {
         LoadingStateManager.incrementActiveRequests()
         val res = client.get(req)
         LoadingStateManager.decrementActiveRequests()

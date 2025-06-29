@@ -40,6 +40,7 @@ class DirectMessageConversationViewModel @Inject constructor(
 
     private val channelId: Long = ssh.get<String>("channelId")?.toLongOrNull() ?: throw IllegalStateException("no channel set in SavedStateHandle")
 
+
     private val _uiState = MutableStateFlow(DirectMessageConversationState())
 
     public var lastSentMessageId = 0L

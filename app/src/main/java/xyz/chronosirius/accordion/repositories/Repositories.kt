@@ -22,4 +22,16 @@ object Repositories {
     fun provideGatewayRepository(): GatewayRepository {
         return GatewayRepository()
     }
+
+    @Provides
+    @Singleton
+    fun provideGuildRepository(apiClient: DiscordApiClient): GuildRepository {
+        return GuildRepository(apiClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSettingsRepository(apiClient: DiscordApiClient): SettingsRepository {
+        return SettingsRepository(apiClient)
+    }
 }

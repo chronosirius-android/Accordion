@@ -18,7 +18,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +66,13 @@ fun DirectMessageScreen(navController: NavController, vm: DirectMessageListViewM
             }
             Spacer(Modifier.height(10.dp))
 
+            var cTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+            LaunchedEffect(Unit) {
+                while (true) {
+                    cTime = System.currentTimeMillis()
+                    kotlinx.coroutines.delay(30000) // Refresh every 10 seconds
+                }
+            }
             LazyColumn {
                 items(channels.size) { index ->
                     val channel = channels[index]
@@ -99,8 +112,8 @@ fun DirectMessageScreen(navController: NavController, vm: DirectMessageListViewM
                             Text("user status", fontSize = 3.em)
                         }
                         Spacer(modifier = Modifier.weight(1f))
-                        channel.timeSinceLastMessage().also { since ->
-                            var time: String =
+                        channel.timeFromLastMessage(cTime).also { since ->
+                            val time: String =
                                 if (since.years > 0) {
                                     "${since.years}y"
                                 } else if (since.months > 0) {
