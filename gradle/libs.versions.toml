@@ -33,6 +33,8 @@ ksp = "2.2.0-2.0.2"
 hilt = "1.2.0"
 coreVersion = "1.16.0"
 coreGoogleShortcuts = "1.1.0"
+squircle-shape = "3.0.1"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -79,6 +81,7 @@ android-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", versi
 android-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt" }
 androidx-core = { group = "androidx.core", name = "core", version.ref = "coreVersion" }
 androidx-core-google-shortcuts = { group = "androidx.core", name = "core-google-shortcuts", version.ref = "coreGoogleShortcuts" }
+squircle-shape = { group = "io.github.stoyan-vuchev", name = "squircle-shape-android", version.ref = "squircle-shape" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

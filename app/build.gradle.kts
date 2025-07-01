@@ -95,4 +95,5 @@ dependencies {
     ksp(libs.hilt.compiler)
     ksp(libs.android.hilt.compiler)
     implementation(libs.android.hilt.navigation.compose)
+    implementation(libs.squircle.shape)
 }
