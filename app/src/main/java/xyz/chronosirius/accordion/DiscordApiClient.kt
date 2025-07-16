@@ -1,8 +1,10 @@
 package xyz.chronosirius.accordion
 
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
+import androidx.core.content.edit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.defaultRequest
@@ -22,12 +24,16 @@ import kotlinx.coroutines.delay
 import xyz.chronosirius.accordion.data.DataArray
 import xyz.chronosirius.accordion.data.DataObject
 import java.io.File
+import javax.inject.Inject
+import javax.inject.Singleton
 
 
-class DiscordApiClient {
+@Singleton
+class DiscordApiClient @Inject constructor(private val sp: SharedPreferences) {
     private val client = HttpClient(OkHttp) {
         defaultRequest {
-            headers.appendIfNameAbsent(HttpHeaders.Authorization, DiscordGatewayService.testToken)
+            headers.appendIfNameAbsent(HttpHeaders.Authorization,
+                sp.getString("token", "undefined") ?: "undefined")
             headers.appendIfNameAbsent(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             //headers.appendIfNameAbsent(HttpHeaders.UserAgent, "Android/Accordion, Native Jetpack-Compose Material3, Kotlin2") // seems like discord doesn't like this UA (I got a warning), so until this becomes bigger, I will switch this to the discord chrome client UA
             headers.appendIfNameAbsent(HttpHeaders.UserAgent, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36")
@@ -41,6 +47,13 @@ class DiscordApiClient {
         LoadingStateManager.incrementActiveRequests()
         val res = client.get(req)
         LoadingStateManager.decrementActiveRequests()
+        if (res.status.value == 401) {
+            Log.e("AccordionViewModel", "Unauthorized request, please check your token.")
+            sp.edit {
+                remove("token")
+                apply()
+            }
+        }
         return DataObject.fromJson(res.bodyAsBytes())
     }
 
@@ -48,9 +61,11 @@ class DiscordApiClient {
         LoadingStateManager.incrementActiveRequests()
         val res = client.get(req)
         LoadingStateManager.decrementActiveRequests()
+        Log.d("AccordionViewModel", "getArray response: ${res.status.value} ${res.bodyAsText()}")
         return DataArray.fromJson(res.bodyAsText())
     }
 
+    @Deprecated("This function is deprecated to deter usage (use AsyncImage instead). This function will remain, but only in cases where AsyncImage cannot be used.")
     suspend fun getImageBitmap(iType: String, objectId: Long, hash: String, cacheDir: File): Bitmap {
         /*
         This function fetches an image from the Discord CDN and returns it as a Bitmap.

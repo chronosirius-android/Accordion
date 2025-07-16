@@ -1,9 +1,9 @@
 package xyz.chronosirius.accordion.viewmodels
 
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -12,8 +12,6 @@ import xyz.chronosirius.accordion.global_models.GuildUIFolder
 import xyz.chronosirius.accordion.repositories.GuildRepository
 import xyz.chronosirius.accordion.repositories.RawGuildFolder
 import xyz.chronosirius.accordion.repositories.SettingsRepository
-import java.lang.IllegalStateException
-import javax.inject.Inject
 
 data class ServerListUiState(
     @Deprecated("use folders") val guilds: List<Guild> = emptyList(), // This will hold the list of server IDs

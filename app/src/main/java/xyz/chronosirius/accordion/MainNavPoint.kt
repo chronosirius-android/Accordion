@@ -1,7 +1,6 @@
 package xyz.chronosirius.accordion
 
 import android.annotation.SuppressLint
-import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -11,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,7 +21,7 @@ import xyz.chronosirius.accordion.viewmodels.DirectMessageConversationViewModel
 
 @SuppressLint("ContextCastToActivity")
 @Composable
-fun MainNavPoint(navController: NavHostController, context: Context, modifier: Modifier = Modifier) {
+fun MainNavPoint(navController: NavHostController, modifier: Modifier = Modifier) {
 
     val activityViewModelStoreOwner = LocalContext.current as ComponentActivity
 

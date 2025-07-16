@@ -12,6 +12,7 @@ import androidx.core.app.ServiceCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import dagger.hilt.android.AndroidEntryPoint
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.websocket.WebSockets
@@ -21,6 +22,7 @@ import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
+import jakarta.inject.Inject
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -30,7 +32,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import xyz.chronosirius.accordion.data.DataObject
 import xyz.chronosirius.accordion.data.ResumeData
-import kotlin.system.exitProcess
+import xyz.chronosirius.accordion.repositories.GatewayRepository
 
 enum class ErrorType(val t: Int) {
     NONE(0),
@@ -39,6 +41,7 @@ enum class ErrorType(val t: Int) {
 }
 
 
+@AndroidEntryPoint
 class DiscordGatewayService : LifecycleService() {
 
     private val client = HttpClient(OkHttp) {
@@ -47,6 +50,9 @@ class DiscordGatewayService : LifecycleService() {
 
     }
 
+
+    @Inject
+    lateinit var gwRepository: GatewayRepository
 
     private var supervisorJob = SupervisorJob(parent=null)
     companion object {

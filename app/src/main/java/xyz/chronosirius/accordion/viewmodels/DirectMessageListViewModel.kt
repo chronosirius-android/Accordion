@@ -10,7 +10,7 @@ import xyz.chronosirius.accordion.DiscordGatewayService
 import xyz.chronosirius.accordion.global_models.DMChannel
 import xyz.chronosirius.accordion.global_models.Message
 import xyz.chronosirius.accordion.repositories.DirectMessagesRepository
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 data class DirectMessageListState(
     val channels: List<DMChannel> = emptyList()
@@ -63,9 +63,10 @@ class DirectMessageListViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(channels = dmRepository.getDirectMessages().sortedWith(
                     compareByDescending { it.lastMessageTimeUnix() }
                 ))
-            } catch (_: Throwable) {
+            } catch (e: Throwable) {
                 // Handle any errors that occur during the fetch operation
                 // For now, we just ignore the error
+                throw e
             }
         }
     }

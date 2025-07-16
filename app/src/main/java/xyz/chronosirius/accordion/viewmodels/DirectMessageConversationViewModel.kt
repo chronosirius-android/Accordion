@@ -12,7 +12,7 @@ import xyz.chronosirius.accordion.global_models.DMChannel
 import xyz.chronosirius.accordion.global_models.Message
 import xyz.chronosirius.accordion.repositories.DirectMessagesRepository
 import xyz.chronosirius.accordion.repositories.GatewayRepository
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 data class DirectMessageConversationState(
     val channel: DMChannel = DMChannel(
@@ -43,7 +43,7 @@ class DirectMessageConversationViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(DirectMessageConversationState())
 
-    public var lastSentMessageId = 0L
+    var lastSentMessageId = 0L
         private set
     val uiState = _uiState.asStateFlow()
 
@@ -103,7 +103,7 @@ class DirectMessageConversationViewModel @Inject constructor(
 //                messages = listOf(q) + _uiState.value.messages
 //            )
 
-            lastSentMessageId = q.id.toLong()
+            lastSentMessageId = q.id
         }
     }
 }

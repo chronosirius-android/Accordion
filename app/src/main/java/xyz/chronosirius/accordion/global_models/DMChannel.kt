@@ -35,18 +35,13 @@ data class DMChannel(
             return DMChannel(
                 da.getLong("id"),
                 da.getInt("type"),
-                da.getString("last_message_id"),
+                da.getString("last_message_id", "0"),
                 da.getInt("flags"),
                 da.getObjectArray("recipients").map { User.fromJson(it) },
                 da.getString("name", null),
                 da.getString("icon", null)
             )
         }
-
-    }
-
-    fun sendMessage(message: Message) {
-        // This will send a message to the channel
 
     }
 
